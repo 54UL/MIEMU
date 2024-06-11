@@ -143,7 +143,7 @@ void EmuShell_UpdateFrame(uint32_t *pixels)
         case 1:
             if (s_currentState == Idle || s_currentState == Running)
             {
-                const char * romPath[PATH_LENGHT];
+                char romPath[PATH_LENGHT];
                 strcat(romPath,s_full_path);
                 strcat(romPath, s_files[s_tabsIndex]);
 

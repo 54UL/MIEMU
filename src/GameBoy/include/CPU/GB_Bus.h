@@ -16,9 +16,9 @@ void GB_BusWrite(EmulationState *ctx, uint16_t address, uint8_t value);
 //  8 bit reg (indexed as: [B,C,D,E,H,L,(HL),A] or [B,E,D,E,H,L,A,F]
 //  16 bit reg (indexed as: [BC,DE,HL,AF] OR [BC,DE,HL,SP]
 
-void GB_SetReg8(EmulationState *ctx, uint8_t r, uint8_t value, uint8_t mode);
-uint8_t GB_GetReg8(EmulationState *ctx, uint8_t r, uint8_t mode);
-void GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode);
+void     GB_SetReg8(EmulationState *ctx, uint8_t r, uint8_t value, uint8_t mode);
+uint8_t  GB_GetReg8(EmulationState *ctx, uint8_t r, uint8_t mode);
+void     GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode);
 uint16_t GB_GetReg16(EmulationState *ctx, uint8_t r, uint8_t mode);
 
 #endif

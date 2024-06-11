@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 message("MINEMU Core")
 project(Core C)
 set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # List all the source files of the Core library
 set(CORE_HEADERS

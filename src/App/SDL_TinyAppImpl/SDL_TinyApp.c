@@ -15,7 +15,7 @@ static EmulatorShell * s_emulator_shell;
 SDL_Thread* eventThread;
 static ActionCallback s_eventCallback;
 static SDL_Event * event;
-static quitStatus = 1 ;
+static int quitStatus = 1 ;
 
 // Rendering
 static uint32_t s_last_update_time;
@@ -150,7 +150,7 @@ void Init_App_Audio()
     s_audioSpec.channels = 1;
     s_audioSpec.samples = 1024;
     s_audioSpec.callback = audioCallback;
-    s_audioSpec.userdata = 440; // Police siren freq
+    s_audioSpec.userdata = (void *) 440; // Police siren freq (ignore the cast lol)
 }
 
 void PlaySquareWave(int frequency, int duration) 

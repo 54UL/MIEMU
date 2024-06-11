@@ -103,26 +103,30 @@ void LoadTests8B(const Emulation *emulator, const EmulationState *emulationCtx)
     constexpr uint8_t testValue = 0x12;
     // LD_R_N
     constexpr uint8_t loadA[] = {0x3E, testValue}; 
-    constexpr uint8_t loadB[] = {0x06, testValue};
-    constexpr uint8_t loadC[] = {0x0E, testValue};
-    constexpr uint8_t loadD[] = {0x16, testValue};
-    constexpr uint8_t loadE[] = {0x1E, testValue};
-    constexpr uint8_t loadH[] = {0x26, testValue};
-    constexpr uint8_t loadL[] = {0x2E, testValue};
+    // constexpr uint8_t loadB[] = {0x06, testValue};
+    // constexpr uint8_t loadC[] = {0x0E, testValue};
+    // constexpr uint8_t loadD[] = {0x16, testValue};
+    // constexpr uint8_t loadE[] = {0x1E, testValue};
+    // constexpr uint8_t loadH[] = {0x26, testValue};
+    // constexpr uint8_t loadL[] = {0x2E, testValue};
+
     // LD_R_R
     constexpr uint8_t copyAToB[] = {0x78};
-    constexpr uint8_t copyCToD[] = {0x4A};
-    constexpr uint8_t copyEToH[] = {0x5C};
-    constexpr uint8_t copyLToA[] = {0x6F};
-    // LD_R_HL
-    constexpr uint8_t loadAFromHL[] = {0x7E};
-    constexpr uint8_t loadBFromDE[] = {0x1A};
-    constexpr uint8_t storeBAtHL[] = {0x70};
-    constexpr uint8_t storeCAtDE[] = {0x41};
+    // constexpr uint8_t copyCToD[] = {0x4A};
+    // constexpr uint8_t copyEToH[] = {0x5C};
+    // constexpr uint8_t copyLToA[] = {0x6F};
+    // LD_R_HL 
+    constexpr uint8_t loadAFromHL[] = {0x7E}; // LD A,(HL) - 0x7E
+    // constexpr uint8_t loadBFromDE[] = {0x1A};
+    // constexpr uint8_t storeBAtHL[] = {0x70};
+    // constexpr uint8_t storeCAtDE[] = {0x41};
+
     constexpr uint8_t loadAFromHLPlus1[] = {0x86, 0x01};
     constexpr uint8_t loadBFromDEMinus2[] = {0x56, 0xFE};
+    
     constexpr uint8_t storeCAtHLPlus3[] = {0x71, 0x03};
     constexpr uint8_t storeDAtDEMinus4[] = {0x51, 0xFC};
+
     constexpr uint8_t storeEFAtHL[] = {0x36, 0xEF};
     constexpr uint8_t storeCDAtDE[] = {0x12, 0xCD};
 
@@ -140,34 +144,6 @@ void LoadTests8B(const Emulation *emulator, const EmulationState *emulationCtx)
 
     RunProgram(emulator, emulationCtx, loadAFromHL, sizeof(loadAFromHL));
     EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue) << ExpectMessage(loadAFromHL, "A = (HL)");
-
-    // Run the program storeBAtHL
-    // RunProgram(emulator, emulationCtx, storeBAtHL, sizeof(storeBAtHL));
-    // EXPECT_TRUE(emulationCtx->memory[emulationCtx->registers->CPU[GB_HL_OFFSET]] == testValue) << ExpectMessage(storeBAtHL, "BA = HL");
-
-    // // Run the program loadAFromHLPlus1
-    // RunProgram(emulator, emulationCtx, loadAFromHLPlus1, sizeof(loadAFromHLPlus1));
-    // EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue) << ExpectMessage(loadAFromHLPlus1, "A = (HL + 1)");
-
-    // Run the program loadBFromDEMinus2
-    // RunProgram(emulator, emulationCtx, loadBFromDEMinus2, sizeof(loadBFromDEMinus2));
-    // EXPECT_TRUE(emulationCtx->registers->CPU[GB_BC_OFFSET] >> 8 == testValue) << ExpectMessage(loadBFromDEMinus2, "B = (DE - 2)");
-
-    // Run the program storeCAtHLPlus3
-    // RunProgram(emulator, emulationCtx, storeCAtHLPlus3, sizeof(storeCAtHLPlus3));
-    // EXPECT_TRUE(emulationCtx->memory[emulationCtx->registers->CPU[GB_HL_OFFSET] + 3] == testValue) << ExpectMessage(storeCAtHLPlus3, "(HL + 3) = CA");
-
-    // Run the program storeDAtDEMinus4
-    // RunProgram(emulator, emulationCtx, storeDAtDEMinus4, sizeof(storeDAtDEMinus4));
-    // EXPECT_TRUE(emulationCtx->memory[emulationCtx->registers->CPU[GB_DE_OFFSET] - 4] == testValue) << ExpectMessage(storeDAtDEMinus4, "(DE - 4) = DA");
-
-    // Run the program storeEFAtHL
-    // RunProgram(emulator, emulationCtx, storeEFAtHL, sizeof(storeEFAtHL));
-    // EXPECT_TRUE(emulationCtx->memory[emulationCtx->registers->CPU[GB_HL_OFFSET]] == 0xEF) << ExpectMessage(storeEFAtHL, "(HL) = 0XEF");
-
-    // Run the program storeCDAtDE
-    // RunProgram(emulator, emulationCtx, storeCDAtDE, sizeof(storeCDAtDE));
-    // EXPECT_TRUE(emulationCtx->memory[emulationCtx->registers->CPU[GB_DE_OFFSET]] == 0xCD) << ExpectMessage(storeCDAtDE, "(DE) = 0xCD");
 }
 
 // TODO: COMPLETE CASES...

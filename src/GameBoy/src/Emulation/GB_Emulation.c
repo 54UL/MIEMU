@@ -10,38 +10,31 @@ static uint32_t s_instructionLenght = 0;
 
 static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
 {
+    // IMPORTANT: INSTRUCTIONS MUST BE PLACED IN DESC MASK ORDER
     // 8-BIT LOAD INSTRUCTIONS
     //-------------MASK----OPCODE--HANDLER
-    
-    // todo: fix masks!!!
-    //LD_R_R 
-    GB_INSTRUCTION(0x0046, 0x0046, GB_LD_R_R),
-    GB_INSTRUCTION(0x004E, 0x004E, GB_LD_R_R),
-    GB_INSTRUCTION(0x0056, 0x0056, GB_LD_R_R),
-    GB_INSTRUCTION(0x005E, 0x005E, GB_LD_R_R),
-    GB_INSTRUCTION(0x0066, 0x0066, GB_LD_R_R),
-    GB_INSTRUCTION(0x006E, 0x006E, GB_LD_R_R),
-    GB_INSTRUCTION(0x0076, 0x0076, GB_LD_R_R),
-    GB_INSTRUCTION(0x0078, 0x0078, GB_LD_R_R),
-
-    //LD_R_N
-    GB_INSTRUCTION(0x0006, 0x0006, GB_LD_R_N),
-    GB_INSTRUCTION(0x000E, 0x000E, GB_LD_R_N),
-    GB_INSTRUCTION(0x0016, 0x0016, GB_LD_R_N),
-    GB_INSTRUCTION(0x001E, 0x001E, GB_LD_R_N),
-    GB_INSTRUCTION(0x0026, 0x0026, GB_LD_R_N),
-    GB_INSTRUCTION(0x002E, 0x002E, GB_LD_R_N),
-    GB_INSTRUCTION(0x0036, 0x0036, GB_LD_R_N),
-    GB_INSTRUCTION(0x003E, 0x003E, GB_LD_R_N),
+    //LD_R_R   
+    GB_INSTRUCTION(0x007F, 0x0046, GB_LD_R_R),
+    GB_INSTRUCTION(0x007F, 0x004E, GB_LD_R_R),
+    GB_INSTRUCTION(0x007F, 0x0056, GB_LD_R_R),
+    GB_INSTRUCTION(0x007F, 0x005E, GB_LD_R_R),
+    GB_INSTRUCTION(0x007F, 0x0066, GB_LD_R_R),
+    GB_INSTRUCTION(0x007F, 0x006E, GB_LD_R_R),
+    GB_INSTRUCTION(0x007F, 0x0076, GB_LD_R_R),
+    GB_INSTRUCTION(0x007F, 0x0078, GB_LD_R_R),
 
     //LD_R_HL
     GB_INSTRUCTION(0X007E, 0X007E, GB_LD_R_HL),
-    GB_INSTRUCTION(0x00CF, 0x0060, GB_LD_R_HL),
-    GB_INSTRUCTION(0x00D7, 0x0060, GB_LD_R_HL),
-    GB_INSTRUCTION(0x00DF, 0x0060, GB_LD_R_HL),
-    GB_INSTRUCTION(0x00E7, 0x0060, GB_LD_R_HL),
-    GB_INSTRUCTION(0x00EF, 0x0060, GB_LD_R_HL),
-    GB_INSTRUCTION(0x00FF, 0x0060, GB_LD_R_HL),
+
+    //LD_R_N
+    GB_INSTRUCTION(0x003E, 0x0006, GB_LD_R_N),
+    GB_INSTRUCTION(0x003E, 0x000E, GB_LD_R_N),
+    GB_INSTRUCTION(0x003E, 0x0016, GB_LD_R_N),
+    GB_INSTRUCTION(0x003E, 0x001E, GB_LD_R_N),
+    GB_INSTRUCTION(0x003E, 0x0026, GB_LD_R_N),
+    GB_INSTRUCTION(0x003E, 0x002E, GB_LD_R_N),
+    GB_INSTRUCTION(0x003E, 0x0036, GB_LD_R_N),
+    GB_INSTRUCTION(0x003E, 0x003E, GB_LD_R_N),
 
     // GB_INSTRUCTION(0x00FF, 0x0046, GB_LD_HL_R),
     // GB_INSTRUCTION(0x00FF, 0x0036, GB_LD_HL_N),
@@ -197,7 +190,7 @@ int GB_TickEmulation()
     uint8_t clockCycles = 0;
 
     // Instruction execution
-    if (fetchedInstruction != NULL)
+    if (fetchedInstruction != NULL) 
     {
 
         if (fetchedInstruction->opcode != 0) // If opcode is 0 then is an NOP... 
@@ -226,7 +219,6 @@ GameBoyInstruction* GB_FetchInstruction(const uint8_t opcode)
 {
     for (int  i = 0x00; i <= GB_INSTRUCTION_SET_LENGHT; i++)
     {
-
         // TODO: IMPLEMENT MASKL AND MASKH DECODING...
         uint16_t opmask = (opcode & s_gb_instruction_set[i].maskl);
 

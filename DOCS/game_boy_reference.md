@@ -2,6 +2,9 @@
 - link:
 https://gbdev.io/pandocs
 
+# GB SOC manual:
+https://gekkio.fi/files/gb-docs/gbctr.pdf
+
 ## HARDWARE REGISTERS
 | Address | Name        | Description                                              | Readable / Writable | Models |
 | ------- | ----------- | -------------------------------------------------------- | ------------------- | ------ |

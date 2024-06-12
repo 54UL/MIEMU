@@ -66,6 +66,7 @@ void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, c
     {
         emulationCtx->memory[i] = 0x00;
     }
+
     // // Clean registers
     // for (int i = 0; i < 4; i++)
     // {
@@ -110,18 +111,18 @@ void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *
 
     // Run the program loadA
     RunProgram(emulator, emulationCtx, loadA, sizeof(loadA));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue) << ExpectMessage(loadA, testValue);
+    EXPECT_TRUE(emulationCtx->registers->A == testValue) << ExpectMessage(loadA, testValue);
 
     // Run the program copyAToB
     RunProgram(emulator, emulationCtx, copyAToB, sizeof(copyAToB));
-    EXPECT_TRUE((emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8) == (emulationCtx->registers->CPU[GB_BC_OFFSET] >> 8)) << ExpectMessage(copyAToB, "B = A");
+    EXPECT_TRUE((emulationCtx->registers->A) == (emulationCtx->registers->CPU[GB_BC_OFFSET] >> 8)) << ExpectMessage(copyAToB, "B = A");
 
     // Run the program loadAFromHL
     emulationCtx->memory[0XF000]  = testValue;
     emulationCtx->registers->CPU[GB_HL_OFFSET] = 0XF000;
 
     RunProgram(emulator, emulationCtx, loadAFromHL, sizeof(loadAFromHL));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue) << ExpectMessage(loadAFromHL, "A = (HL)");
+    EXPECT_TRUE(emulationCtx->registers->A == testValue) << ExpectMessage(loadAFromHL, "A = (HL)");
 }
 
 void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx)
@@ -147,12 +148,14 @@ void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulation
     // Jump instructions
     RunProgram(emulator, emulationCtx, jumpInstruction, sizeof(jumpInstruction));
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0010) << "Jump instruction";
+
     RunProgram(emulator, emulationCtx, jumpRelativeInstruction, sizeof(jumpRelativeInstruction));
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0021) << "Jump Relative instruction";
 
     // Call and Return instructions
     RunProgram(emulator, emulationCtx, callInstruction, sizeof(callInstruction));
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0020) << "Call instruction";
+
     RunProgram(emulator, emulationCtx, returnInstruction, sizeof(returnInstruction));
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0013) << "Return instruction";
 
@@ -179,49 +182,49 @@ void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulation
 void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     // ALU instructions
-    constexpr uint8_t testValue = 0x12; // 18 decimal
+    constexpr uint8_t testValue = 0x10; // 18 decimal
+
     constexpr uint8_t testOverflowValue = 0XFF; // 18 decimal
-    constexpr uint8_t testUnderflowValue = 0x00; // 18 decimal
 
     // 0x3E MEANS LD A,D8...
-    constexpr uint8_t addInstruction[] = {0x3E, testValue, 0x87}; // ADD A, A
-    constexpr uint8_t adcInstruction[] = {0x3E, testOverflowValue, 0x8F }; // ADC A, A
+    constexpr uint8_t addInstruction[] = {0x3E, testOverflowValue, 0x87}; // ADD A, A
+    constexpr uint8_t adcInstruction[] = {0x3E, testValue, 0x8F }; // ADC A, A
     constexpr uint8_t subInstruction[] = {0x3E, testValue, 0x97}; // SUB A, A
-    constexpr uint8_t sbcInstruction[] = {0x3E, testUnderflowValue, 0x9F}; // SBC A, A
+    constexpr uint8_t sbcInstruction[] = {0x3E, testValue, 0x9F}; // SBC A, A
     constexpr uint8_t andInstruction[] = {0x3E, testValue, 0xA7}; // AND A, A
     constexpr uint8_t xorInstruction[] = {0x3E, testValue, 0xAF}; // XOR A, A
     constexpr uint8_t orInstruction[] = {0x3E, testValue, 0xB7};  // OR A, A
     constexpr uint8_t cpInstruction[] = {0x3E, testValue, 0xBF};  // CP A, A
 
     // ALU instructions
-    // ADD
+    // ADD (testOverflowValue +testOverflowValue) = (510 & 0xFF) = 254, carry = 1
     RunProgram(emulator, emulationCtx, addInstruction, sizeof(addInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue + testValue) << "ADD A, A";
+    uint8_t overflowedValue = ((testOverflowValue + testOverflowValue) & 0XFF);
+    EXPECT_TRUE(emulationCtx->registers->A == overflowedValue) << "ADD A, A";
 
-    // ADC 
+    // ADC (testvalue + testvalue) + carry
     RunProgram(emulator, emulationCtx, adcInstruction, sizeof(adcInstruction));
-    uint8_t carry = GB_TEST_F(emulationCtx, GB_C_FLAG);
-    // TODO: SOLVE CARRY PROBLEM!!!
-    // 0x12(testvalue) + 0XFF(ofTestValue) = 0x111 & 0xFF = 0x11
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0XFE && carry) << "ADC A, A";
+    EXPECT_TRUE(emulationCtx->registers->A == (testValue + testValue + 1)) << "ADC A, A";
 
     RunProgram(emulator, emulationCtx, subInstruction, sizeof(subInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0x00) << "SUB A, A";
+    EXPECT_TRUE(emulationCtx->registers->A == 0x00) << "SUB A, A";
 
     RunProgram(emulator, emulationCtx, sbcInstruction, sizeof(sbcInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0xFF) << "SBC A, A";
+    EXPECT_TRUE(emulationCtx->registers->A == 0xFF) << "SBC A, A";
 
     RunProgram(emulator, emulationCtx, andInstruction, sizeof(andInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue) << "AND A, A";
+    EXPECT_TRUE(emulationCtx->registers->A == testValue) << "AND A, A";
 
     RunProgram(emulator, emulationCtx, xorInstruction, sizeof(xorInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0x00) << "XOR A, A";
+    EXPECT_TRUE(emulationCtx->registers->A == 0x00) << "XOR A, A";
 
     RunProgram(emulator, emulationCtx, orInstruction, sizeof(orInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue) << "OR A, A";
+    EXPECT_TRUE(emulationCtx->registers->A == testValue) << "OR A, A";
 
     RunProgram(emulator, emulationCtx, cpInstruction, sizeof(cpInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0x00) << "CP A, A";
+    const uint8_t zero = GB_TEST_F(emulationCtx, GB_ZERO_FLAG);
+
+    EXPECT_TRUE(zero) << "CP A, A";
 }
 
 void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx)
@@ -262,10 +265,10 @@ void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulat
 }
 
 // Test case for 8-bit load/store instructions
-// TEST_F(GameBoyFixture, Load_And_Store_8bit)
-// {
-//     Load_And_Store_Tests_8bit(emulator, emulationCtx);
-// }
+TEST_F(GameBoyFixture, Load_And_Store_8bit)
+{
+    Load_And_Store_Tests_8bit(emulator, emulationCtx);
+}
 
 // Test case for Game Boy CPU control instructions
 // TEST_F(GameBoyFixture, ControlInstructions)

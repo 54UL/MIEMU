@@ -64,6 +64,7 @@ typedef struct
 {       
     void    (*Init)(EmulationInfo *info, ActionCallback eventCallback, EmulatorShell *shell);
     uint8_t (*Render)(StepCallback renderCallback);
+    uint32_t(*GetTicks)(void);
     void    (*Reset)(void);
     void    (*Exit)(void);
 } EmuApp;

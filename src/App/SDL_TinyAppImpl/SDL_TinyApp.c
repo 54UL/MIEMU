@@ -303,6 +303,11 @@ uint8_t Step_SDL(StepCallback renderCallback)
     return quitStatus;
 }
 
+uint32_t GetTicks_SDL()
+{
+    return SDL_GetTicks();
+}
+
 void Reset_SDL(void)
 {
     free(s_emulation_pixels);

@@ -40,8 +40,7 @@ int main(int argc, char **argv)
     // Main loop
     while (running)
     {
-        //TODO: SDL_GetTicks must be abstracted into app->getTicks()...
-        uint32_t frameBeginTicks = SDL_GetTicks();
+        uint32_t frameBeginTicks = app->GetTicks();
         uint32_t delta_time = frameBeginTicks - last_update_time;
 
         // TODO: WHY TF DOES THE RENDER STATUS CONTROL THE MAIN LOOP???

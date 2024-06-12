@@ -9,6 +9,7 @@
 EmuApp TinySDLApp = {
     .Init   = Init_App,
     .Render = Step_SDL,
+    .GetTicks = GetTicks_SDL,
     .Reset  = Reset_SDL,
     .Exit   = Exit_SDL_App
 };

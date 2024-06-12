@@ -44,10 +44,10 @@
 
 //TODO: WHEN WIDELY USED CHECK PERFORMANCE REPLACING FOR A FUNCTION...
 #define GB_U8_TO_U16(LSB, MSB) (uint16_t)(lsb | (msb << 8))
-#define GB_F_OR_AF(CTX, F) ((CTX->registers->CPU[GB_AF_OFFSET] | F) & 0xFF)
-#define GB_A_OR_AF(CTX, A) ((CTX->registers->CPU[GB_AF_OFFSET] | A) << 8)
+#define GB_F_OR_AF(CTX, F) CTX->registers->CPU[GB_AF_OFFSET] |=  (F & 0xFF)
+#define GB_A_OR_AF(CTX, A) CTX->registers->CPU[GB_AF_OFFSET] |=  ((A << 8) & 0XFF00)
 #define GB_TMP_F() uint8_t tmpRegF = 0x00
-#define GB_SET_F(FLAG, VALUE) tmpRegF | ((FLAG) << (VALUE))
+#define GB_SET_F(FLAG, VALUE) tmpRegF |= ((FLAG) << (VALUE))
 #define GB_TEST_F(CTX, FLAG) (((CTX->registers->CPU[GB_AF_OFFSET] & 0xFF) >> FLAG) & 0X01)
 
 typedef struct 

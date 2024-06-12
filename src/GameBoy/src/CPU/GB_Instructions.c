@@ -317,7 +317,7 @@ uint8_t GB_ADD_A_R(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + ctx->registers->CPU[rr];
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + GB_GetReg8(ctx, rr, REG8_MODE_A);
 
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
@@ -329,6 +329,8 @@ uint8_t GB_ADD_A_R(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    
+    return 4;
 }
 
 uint8_t GB_ADD_A_N(EmulationState *ctx)
@@ -345,7 +347,7 @@ uint8_t GB_ADD_A_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
     
     GB_TMP_F();
@@ -372,7 +374,7 @@ uint8_t GB_ADD_A_HL(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->CPU[GB_HL_OFFSET]);
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -383,6 +385,8 @@ uint8_t GB_ADD_A_HL(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+
+    return 8;
 }
 
 uint8_t GB_ADC_A_R(EmulationState *ctx)
@@ -400,7 +404,7 @@ uint8_t GB_ADC_A_R(EmulationState *ctx)
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + c + ctx->registers->CPU[rr];
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + c + GB_GetReg8(ctx, rr, REG8_MODE_A);
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -411,6 +415,8 @@ uint8_t GB_ADC_A_R(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    
+    return 4;
 }
 
 uint8_t GB_ADC_A_N(EmulationState *ctx)
@@ -429,7 +435,7 @@ uint8_t GB_ADC_A_N(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + c + n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + c + n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -440,6 +446,8 @@ uint8_t GB_ADC_A_N(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+
+    return 8;
 }
 
 uint8_t GB_ADC_A_HL(EmulationState *ctx)
@@ -458,7 +466,7 @@ uint8_t GB_ADC_A_HL(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->CPU[GB_HL_OFFSET]);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + c + n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) + c + n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -469,6 +477,8 @@ uint8_t GB_ADC_A_HL(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+
+    return 8;
 }
 
 uint8_t GB_SUB_R(EmulationState *ctx)
@@ -484,7 +494,7 @@ uint8_t GB_SUB_R(EmulationState *ctx)
     */
 
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - ctx->registers->CPU[rr];
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - GB_GetReg8(ctx, rr, REG8_MODE_A);
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -511,7 +521,7 @@ uint8_t GB_SUB_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -538,7 +548,7 @@ uint8_t GB_SUB_HL(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->CPU[GB_HL_OFFSET]);
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -565,7 +575,7 @@ uint8_t GB_SBC_A_R(EmulationState *ctx)
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - c - ctx->registers->CPU[rr];
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - c - GB_GetReg8(ctx, rr, REG8_MODE_A);
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -593,7 +603,7 @@ uint8_t GB_SBC_A_N(EmulationState *ctx)
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - c - n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - c - n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();
@@ -622,7 +632,7 @@ uint8_t GB_SBC_A_HL(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->CPU[GB_HL_OFFSET]);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const uint8_t sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - c - n;
+    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET, REG8_MODE_A) - c - n;
     GB_SetReg8(ctx, GB_A_OFFSET, sum, REG8_MODE_A);
 
     GB_TMP_F();

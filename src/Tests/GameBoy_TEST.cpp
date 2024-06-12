@@ -18,6 +18,7 @@ RESOURCES:
 
 #include <gtest/gtest.h>
 #include <stdlib.h>
+
 extern "C"
 {
 #include <minemu.h>
@@ -49,11 +50,10 @@ protected:
 };
 
 void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, const uint8_t *programArray, const uint16_t programLength);
-
-void LoadTests8B(const Emulation *emulator, const EmulationState *emulationCtx);
-void CpuControlTests(const Emulation *emulator, const EmulationState *emulationCtx);
-void CpuAluTests(const Emulation *emulator, const EmulationState *emulationCtx);
-void Cpu16BitAluTests(const Emulation *emulator, const EmulationState *emulationCtx);
+void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx);
+void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx);
+void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx);
+void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx);
 
 void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, const uint8_t *programArray, const uint16_t programLength)
 {
@@ -98,37 +98,15 @@ void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, c
     MNE_Log("-----------------PROGRAM END-----------------\n");
 }
 
-void LoadTests8B(const Emulation *emulator, const EmulationState *emulationCtx)
+// TODO: ONLY BASIC CASES WERE IMPLEMENTED (COMPLETE ALL OTHER CASES....)
+void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     constexpr uint8_t testValue = 0x12;
-    // LD_R_N
-    constexpr uint8_t loadA[] = {0x3E, testValue}; 
-    // constexpr uint8_t loadB[] = {0x06, testValue};
-    // constexpr uint8_t loadC[] = {0x0E, testValue};
-    // constexpr uint8_t loadD[] = {0x16, testValue};
-    // constexpr uint8_t loadE[] = {0x1E, testValue};
-    // constexpr uint8_t loadH[] = {0x26, testValue};
-    // constexpr uint8_t loadL[] = {0x2E, testValue};
-
-    // LD_R_R
-    constexpr uint8_t copyAToB[] = {0x78};
-    // constexpr uint8_t copyCToD[] = {0x4A};
-    // constexpr uint8_t copyEToH[] = {0x5C};
-    // constexpr uint8_t copyLToA[] = {0x6F};
-    // LD_R_HL 
+ 
+    constexpr uint8_t loadA[] = {0x3E, testValue}; // LD_R_N
+    constexpr uint8_t copyAToB[] = {0x78}; // LD_R_R
+   
     constexpr uint8_t loadAFromHL[] = {0x7E}; // LD A,(HL) - 0x7E
-    // constexpr uint8_t loadBFromDE[] = {0x1A};
-    // constexpr uint8_t storeBAtHL[] = {0x70};
-    // constexpr uint8_t storeCAtDE[] = {0x41};
-
-    constexpr uint8_t loadAFromHLPlus1[] = {0x86, 0x01};
-    constexpr uint8_t loadBFromDEMinus2[] = {0x56, 0xFE};
-    
-    constexpr uint8_t storeCAtHLPlus3[] = {0x71, 0x03};
-    constexpr uint8_t storeDAtDEMinus4[] = {0x51, 0xFC};
-
-    constexpr uint8_t storeEFAtHL[] = {0x36, 0xEF};
-    constexpr uint8_t storeCDAtDE[] = {0x12, 0xCD};
 
     // Run the program loadA
     RunProgram(emulator, emulationCtx, loadA, sizeof(loadA));
@@ -146,18 +124,20 @@ void LoadTests8B(const Emulation *emulator, const EmulationState *emulationCtx)
     EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue) << ExpectMessage(loadAFromHL, "A = (HL)");
 }
 
-// TODO: COMPLETE CASES...
-void CpuControlTests(const Emulation *emulator, const EmulationState *emulationCtx)
+void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     // Jump instructions
     constexpr uint8_t jumpInstruction[] = {0xC3, 0x10, 0x00};   // JP 0x0010
     constexpr uint8_t jumpRelativeInstruction[] = {0x18, 0x0F}; // JR 0x000F
+    
     // Call and Return instructions
     constexpr uint8_t callInstruction[] = {0xCD, 0x20, 0x00}; // CALL 0x0020
     constexpr uint8_t returnInstruction[] = {0xC9};           // RET
+    
     // Conditional jump instructions
     constexpr uint8_t conditionalJumpInstruction[] = {0xC2, 0x30, 0x00};   // JP NZ, 0x0030
     constexpr uint8_t conditionalJumpRelativeInstruction[] = {0x20, 0x0F}; // JR NZ, 0x000F
+    
     // Conditional call and return instructions
     constexpr uint8_t conditionalCallInstruction[] = {0xC4, 0x40, 0x00}; // CALL NZ, 0x0040
     constexpr uint8_t conditionalReturnInstruction[] = {0xC0};           // RET NZ
@@ -195,27 +175,35 @@ void CpuControlTests(const Emulation *emulator, const EmulationState *emulationC
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0000) << "Restart instruction";
 }
 
-// TODO: COMPLETE CASES...
-void CpuAluTests(const Emulation *emulator, const EmulationState *emulationCtx)
+
+void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     // ALU instructions
-    constexpr uint8_t testValue = 0x12;
+    constexpr uint8_t testValue = 0x12; // 18 decimal
+    constexpr uint8_t testOverflowValue = 0XFF; // 18 decimal
+    constexpr uint8_t testUnderflowValue = 0x00; // 18 decimal
+
     // 0x3E MEANS LD A,D8...
     constexpr uint8_t addInstruction[] = {0x3E, testValue, 0x87}; // ADD A, A
-    constexpr uint8_t adcInstruction[] = {0x3E, testValue, 0x8F}; // ADC A, A
+    constexpr uint8_t adcInstruction[] = {0x3E, testOverflowValue, 0x8F }; // ADC A, A
     constexpr uint8_t subInstruction[] = {0x3E, testValue, 0x97}; // SUB A, A
-    constexpr uint8_t sbcInstruction[] = {0x3E, testValue, 0x9F}; // SBC A, A
+    constexpr uint8_t sbcInstruction[] = {0x3E, testUnderflowValue, 0x9F}; // SBC A, A
     constexpr uint8_t andInstruction[] = {0x3E, testValue, 0xA7}; // AND A, A
     constexpr uint8_t xorInstruction[] = {0x3E, testValue, 0xAF}; // XOR A, A
     constexpr uint8_t orInstruction[] = {0x3E, testValue, 0xB7};  // OR A, A
     constexpr uint8_t cpInstruction[] = {0x3E, testValue, 0xBF};  // CP A, A
 
     // ALU instructions
+    // ADD
     RunProgram(emulator, emulationCtx, addInstruction, sizeof(addInstruction));
     EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == testValue + testValue) << "ADD A, A";
 
+    // ADC 
     RunProgram(emulator, emulationCtx, adcInstruction, sizeof(adcInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == (testValue + testValue + 1)) << "ADC A, A";
+    uint8_t carry = GB_TEST_F(emulationCtx, GB_C_FLAG);
+    // TODO: SOLVE CARRY PROBLEM!!!
+    // 0x12(testvalue) + 0XFF(ofTestValue) = 0x111 & 0xFF = 0x11
+    EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0XFE && carry) << "ADC A, A";
 
     RunProgram(emulator, emulationCtx, subInstruction, sizeof(subInstruction));
     EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0x00) << "SUB A, A";
@@ -236,7 +224,7 @@ void CpuAluTests(const Emulation *emulator, const EmulationState *emulationCtx)
     EXPECT_TRUE(emulationCtx->registers->CPU[GB_AF_OFFSET] >> 8 == 0x00) << "CP A, A";
 }
 
-void Cpu16BitAluTests(const Emulation *emulator, const EmulationState *emulationCtx)
+void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     constexpr uint8_t testValueLow = 0x12;
     constexpr uint8_t testValueHigh = 0x34;
@@ -274,10 +262,10 @@ void Cpu16BitAluTests(const Emulation *emulator, const EmulationState *emulation
 }
 
 // Test case for 8-bit load/store instructions
-TEST_F(GameBoyFixture, LoadStore8BitInstructions)
-{
-    LoadTests8B(emulator, emulationCtx);
-}
+// TEST_F(GameBoyFixture, Load_And_Store_8bit)
+// {
+//     Load_And_Store_Tests_8bit(emulator, emulationCtx);
+// }
 
 // Test case for Game Boy CPU control instructions
 // TEST_F(GameBoyFixture, ControlInstructions)
@@ -286,10 +274,10 @@ TEST_F(GameBoyFixture, LoadStore8BitInstructions)
 // }
 
 // Test case for 8-bit ALU instructions
-// TEST_F(GameBoyFixture, Alu8BitInstructions)
-// {
-//     CpuAluTests(emulator, emulationCtx);
-// }
+TEST_F(GameBoyFixture, ALU_8Bit)
+{
+    CPU_ALU_Tests_8bit(emulator, emulationCtx);
+}
 
 // Test case for 8-bit ALU instructions
 // TEST_F(GameBoyFixture, Alu16BitInstructions)

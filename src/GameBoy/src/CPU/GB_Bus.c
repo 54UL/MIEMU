@@ -1,4 +1,5 @@
 #include <CPU/GB_Bus.h>
+#include <minemu/MNE_Log.h>
 
 /* GB_Bus.c TODOS
 - IMPLEMENT HARDWARE REGISTER HASH LIST TO CHECK ACCESS POLICY (R, R/W,TRIGGER ON W, ETC)
@@ -49,22 +50,59 @@ uint8_t GB_GetReg8(EmulationState *ctx, uint8_t r)
     return ctx->registers->FILE_8[r];
 }
 
-// TODO: MODE IS NOT NECESSARY
 void GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode)
 {
-    if ((REG16_MODE_AF & mode) == 1)
+    //TODO: IMPROVE CONDITIONS
+
+    switch (mode)
     {
+    case REG16_MODE_AF:
         ctx->registers->FILE_16[r] = value;
-        return;
-    }
-    else
-    {
-        ctx->registers->SP = value;
+        break;
+
+    case REG16_MODE_SP:
+        if (r == 3)
+        {
+            ctx->registers->SP = value;
+        }
+        else
+        {
+            ctx->registers->FILE_16[r] = value;
+        }
+        break;
+
+    case REG16_MODE_HL_PLUS_HL_MINUS:
+        //TODO:IMPLEMENT ME MF
+        break;
+        
+    default:
+        MNE_Log("ERROR: GB_SetReg16 CANNOT DEDEUCE REGISTER ADDRESSING MODE");
+        break;
     }
 }
 
-// TODO: MODE IS NOT NECESSARY
 uint16_t GB_GetReg16(EmulationState *ctx, uint8_t r, uint8_t mode)
 {
-    return (REG16_MODE_AF & mode) ? ctx->registers->FILE_16[r] : ctx->registers->SP;
+    //TODO: IMPROVE CONDITIONS
+    switch (mode)
+    {
+    case REG16_MODE_AF:
+        return ctx->registers->FILE_16[r];
+    case REG16_MODE_SP:
+        if (r == 3)
+        {
+            return ctx->registers->SP ;
+        }
+        else 
+        {
+            return ctx->registers->FILE_16[r];
+        }
+        break;
+    case REG16_MODE_HL_PLUS_HL_MINUS:
+        /* code */
+        break; 
+    default:
+        MNE_Log("ERROR: GB_GetReg16 CANNOT DEDEUCE REGISTER ADDRESSING MODE");
+        break;
+    }
 }

@@ -1076,7 +1076,7 @@ uint8_t GB_CPL(EmulationState *ctx)
 // 16 BIT ALU INSTRUCTIONS
 uint8_t GB_ADD_HL_RR(EmulationState *ctx)
 {
-    // encoding: ???
+    // encoding: 0b00xx1001/various 
     /*
         HL = HL+rr     ; rr may be BC,DE,HL,SP
     */

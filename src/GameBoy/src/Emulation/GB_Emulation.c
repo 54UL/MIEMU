@@ -2,6 +2,8 @@
 #include <Emulation/GB_Instruction.h>
 
 #include <CPU/GB_Instructions.h>
+#include <Memory/GB_MemoryMap.h>
+
 #include <string.h>
 #include <minemu.h>
 
@@ -10,6 +12,7 @@ static uint32_t s_instructionLenght = 0;
 
 static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
     {
+        // TODO: INSTRUCTIONS WITH R PREFIX HAVE MISSING CASES..
         // 8-BIT LOAD INSTRUCTIONS
         //-------------MASK----OPCODE--HANDLER
         // LD_R_R
@@ -22,8 +25,25 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x0076, GB_LD_R_R),
         GB_INSTRUCTION(0xFF, 0x0078, GB_LD_R_R),
 
+        // LD_R_N
+        GB_INSTRUCTION(0xFF, 0x0006, GB_LD_R_N),
+        GB_INSTRUCTION(0xFF, 0x000E, GB_LD_R_N),
+        GB_INSTRUCTION(0xFF, 0x0016, GB_LD_R_N),
+        GB_INSTRUCTION(0xFF, 0x001E, GB_LD_R_N),
+        GB_INSTRUCTION(0xFF, 0x0026, GB_LD_R_N),
+        GB_INSTRUCTION(0xFF, 0x002E, GB_LD_R_N),
+        GB_INSTRUCTION(0xFF, 0x0036, GB_LD_R_N),
+        GB_INSTRUCTION(0xFF, 0x003E, GB_LD_R_N),
+
         // LD_R_HL
         GB_INSTRUCTION(0X7E, 0X7E, GB_LD_R_HL),
+
+        // 16 BIT LOAD INSTRUCTIONS
+        GB_INSTRUCTION(0x00CF, 0x0001, GB_LD_RR_NN),
+        GB_INSTRUCTION(0xFFFF, 0x0000, GB_LD_NN_SP),
+        GB_INSTRUCTION(0xFFFF, 0x00F9, GB_LD_SP_HL),
+        GB_INSTRUCTION(0x00CF, 0x00C5, GB_PUSH_RR),
+        GB_INSTRUCTION(0x00CF, 0x00D1, GB_POP_RR),
 
         // 8 BIT ALU
         GB_INSTRUCTION(0xF8, 0x80, GB_ADD_A_R),
@@ -57,22 +77,12 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x27, GB_DAA),
         GB_INSTRUCTION(0xFF, 0x2F, GB_CPL),
 
-        // LD_R_N
-        GB_INSTRUCTION(0xFF, 0x0006, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x000E, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x0016, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x001E, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x0026, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x002E, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x0036, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x003E, GB_LD_R_N),
-
-        // 16 BIT ALU
-        // GB_INSTRUCTION(0x00F0, 0x0000, GB_LD_RR_NN),
-        // GB_INSTRUCTION(0xFFFF, 0x0000, GB_LD_NN_SP),
-        // GB_INSTRUCTION(0xFFFF, 0x00F9, GB_LD_SP_HL),
-        // GB_INSTRUCTION(0x00CF, 0x00C5, GB_PUSH_RR),
-        // GB_INSTRUCTION(0x00CF, 0x00D1, GB_POP_RR),
+        // 16 BIT ALU INSTRUCTIONS
+        GB_INSTRUCTION(0xFF00, 0x0900, GB_ADD_HL_RR),
+        GB_INSTRUCTION(0xFF00, 0x0300, GB_INC_RR),
+        GB_INSTRUCTION(0xFF00, 0x0B00, GB_DEC_RR),
+        GB_INSTRUCTION(0xFF00, 0xE800, GB_ADD_SP_DD),
+        GB_INSTRUCTION(0xFFFF, 0xF800, GB_LD_HL_SP_PLUS_DD),
 
         // CPU CONTROL INSTRUCTIONS
         // GB_INSTRUCTION(0xFFFF, 0x003F, GB_CCF),
@@ -99,11 +109,28 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
 
 uint8_t GB_Initialize(int argc, const char ** argv)
 {
-    // sort instructions by mask (TEMPORAL FIX THIS)
-
-
     MNE_New(s_systemContext->registers, 1, GB_Registers);
     MNE_New(s_systemContext->memory, GB_MEMORY_SIZE, uint8_t);
+
+    // Default memory values on power on/reset 
+
+    // TODO: WHEN READING FROMN CARTIGES UNCOMMENT THE LINE BELOW
+    // s_systemContext->registers->PC = 0X0100; 
+
+    s_systemContext->registers->SP = 0xFFFE;
+    
+    s_systemContext->memory[GB_IE_REGISTER] = 0x00;
+    s_systemContext->memory[GB_IF_REGISTER] = 0xE0;
+
+    s_systemContext->memory[GB_LCDC_REGISTER] = 0x91;
+    s_systemContext->memory[GB_STAT_REGISTER] = 0x81;
+
+    s_systemContext->memory[GB_BGP_REGISTER] = 0xFC;
+    s_systemContext->memory[GB_OBP0_REGISTER] = 0XFF;
+    s_systemContext->memory[GB_OBP1_REGISTER] = 0XFF;
+
+    // s_systemContext->IF = 0x00;
+    return 0;
 }
 
 long GB_LoadProgram(const char *filePath)

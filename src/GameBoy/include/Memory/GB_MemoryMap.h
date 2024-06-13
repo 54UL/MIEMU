@@ -56,5 +56,19 @@ $FFFF      | [IE]        | Interrupt enable                                     
 #define GB_HRAM_END 0xFFFE
 
 #define GB_IE_REGISTER 0xFFFF
+#define GB_IF_REGISTER 0xFF0F
+
+#define GB_LCDC_REGISTER 0xFF40 // (LCD Control Register)
+#define GB_STAT_REGISTER 0xFF41 // (LCDC Status Register)
+#define GB_SCY_REGISTER 0xFF42  // (Scroll Y)
+#define GB_SCX_REGISTER 0xFF43  // (Scroll X)
+#define GB_LY_REGISTER 0xFF44   // (LCDC Y-Coordinate)
+#define GB_LYC_REGISTER 0xFF45  // (LY Compare)
+#define GB_DMA_REGISTER 0xFF46  // (Direct Memory Access)
+#define GB_BGP_REGISTER 0xFF47  // (Background Palette Data)
+#define GB_OBP0_REGISTER 0xFF48 // (Object Palette 0 Data)
+#define GB_OBP1_REGISTER 0xFF49 // (Object Palette 1 Data)
+#define GB_WY_REGISTER 0xFF4A   // (Window Y Position)
+#define GB_WX_REGISTER 0xFF4B   // (Window X Position - 7)
 
 #endif

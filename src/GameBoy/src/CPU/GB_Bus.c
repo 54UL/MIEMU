@@ -19,11 +19,9 @@ void GB_BusWrite(EmulationState *ctx, uint16_t address, uint8_t value)
 
 void GB_SetReg8(EmulationState *ctx, uint8_t r, uint8_t value)
 {
-    uint8_t *halfregs = ((uint8_t *)ctx->registers->CPU);
-
     if (r == GB_HL_INDIRECT_OFFSET)
     {
-        GB_BusWrite(ctx, ctx->registers->CPU[GB_HL_OFFSET], value);
+        GB_BusWrite(ctx, ctx->registers->HL, value);
         return;
     }
 
@@ -33,15 +31,13 @@ void GB_SetReg8(EmulationState *ctx, uint8_t r, uint8_t value)
         r--;
     }
 
-    halfregs[r] = value;
+    ctx->registers->FILE_8[r] = value;
 }
 uint8_t GB_GetReg8(EmulationState *ctx, uint8_t r)
 {
-    const uint8_t *halfregs = ((uint8_t *)ctx->registers->CPU);
-
     if (r == GB_HL_INDIRECT_OFFSET)
     {
-        return GB_BusRead(ctx, ctx->registers->CPU[GB_HL_OFFSET]);
+        return GB_BusRead(ctx, ctx->registers->HL);
     }
 
     // improve (this is to ignore F register in the indexing)
@@ -50,7 +46,7 @@ uint8_t GB_GetReg8(EmulationState *ctx, uint8_t r)
         r--;
     }
 
-    return halfregs[r];
+    return ctx->registers->FILE_8[r];
 }
 
 // TODO: MODE IS NOT NECESSARY
@@ -58,7 +54,7 @@ void GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode)
 {
     if ((REG16_MODE_AF & mode) == 1)
     {
-        ctx->registers->CPU[r] = value;
+        ctx->registers->FILE_16[r] = value;
         return;
     }
     else
@@ -70,5 +66,5 @@ void GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode)
 // TODO: MODE IS NOT NECESSARY
 uint16_t GB_GetReg16(EmulationState *ctx, uint8_t r, uint8_t mode)
 {
-    return (REG16_MODE_AF & mode) ? ctx->registers->CPU[r] : ctx->registers->SP;
+    return (REG16_MODE_AF & mode) ? ctx->registers->FILE_16[r] : ctx->registers->SP;
 }

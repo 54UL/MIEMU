@@ -1,10 +1,7 @@
 /*
 TODO WALL:
-    - SEPARTE LOAD/COPY/STORE INSTRUCTIONS INTO INDEPEDENT TEST CASES FROM LoadTests8B
-    - IMPLEMENT CORNER CASES AND CB PREFIX TESTS... (OH GOOD PLEASE HAVE MERCY ON ME)
-    - Refactors needed and a header file...
-    - Rename this test file to 'GameBoyCpuTest'
-    - Make expectMessage only to return the name of the function...
+    - IMPLEMENT ALL THE INSTRUCTIONS TESTS (ONLY PARTIAL TESTING IS DONE) AND CB PREFIX TESTS... (OH GOOD PLEASE HAVE MERCY ON ME)
+    - RENAME THIS TEST FILE TO 'GameBoyCpuTest'
 
 RESOURCES:
 - TEST ROOMS EMULATION REFERENCES:
@@ -70,7 +67,7 @@ void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, c
     // // Clean registers
     // for (int i = 0; i < 4; i++)
     // {
-    //       emulationCtx->registers->CPU[i] = 0;
+    //       emulationCtx->registers->FILE_16[i] = 0;
     // }
 
     // Restart pc
@@ -99,7 +96,6 @@ void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, c
     MNE_Log("-----------------PROGRAM END-----------------\n");
 }
 
-// TODO: ONLY BASIC CASES WERE IMPLEMENTED (COMPLETE ALL OTHER CASES....)
 void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     constexpr uint8_t testValue = 0x12;
@@ -115,11 +111,11 @@ void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *
 
     // Run the program copyAToB
     RunProgram(emulator, emulationCtx, copyAToB, sizeof(copyAToB));
-    EXPECT_TRUE((emulationCtx->registers->A) == (emulationCtx->registers->CPU[GB_BC_OFFSET] >> 8)) << ExpectMessage(copyAToB, "B = A");
+    EXPECT_TRUE((emulationCtx->registers->A) == (emulationCtx->registers->FILE_16[GB_BC_OFFSET] >> 8)) << ExpectMessage(copyAToB, "B = A");
 
     // Run the program loadAFromHL
     emulationCtx->memory[0XF000]  = testValue;
-    emulationCtx->registers->CPU[GB_HL_OFFSET] = 0XF000;
+    emulationCtx->registers->HL = 0XF000;
 
     RunProgram(emulator, emulationCtx, loadAFromHL, sizeof(loadAFromHL));
     EXPECT_TRUE(emulationCtx->registers->A == testValue) << ExpectMessage(loadAFromHL, "A = (HL)");
@@ -160,10 +156,10 @@ void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulation
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0013) << "Return instruction";
 
     // Conditional jump instructions
-    // emulationCtx->registers->CPU[GB_ZF_OFFSET] = 0;  // Set Zero Flag to false
+    // emulationCtx->registers->FILE_16[GB_ZF_OFFSET] = 0;  // Set Zero Flag to false
     // RunProgram(emulator, emulationCtx, conditionalJumpInstruction, sizeof(conditionalJumpInstruction));
     // EXPECT_TRUE(emulationCtx->registers->PC == 0x0030) << "Conditional Jump instruction";
-    // emulationCtx->registers->CPU[GB_ZF_OFFSET] = 1;  // Set Zero Flag to true
+    // emulationCtx->registers->FILE_16[GB_ZF_OFFSET] = 1;  // Set Zero Flag to true
     // RunProgram(emulator, emulationCtx, conditionalJumpRelativeInstruction, sizeof(conditionalJumpRelativeInstruction));
     // EXPECT_TRUE(emulationCtx->registers->PC == 0x0033) << "Conditional Jump Relative instruction";
 
@@ -182,9 +178,9 @@ void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulation
 void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     // ALU instructions
-    constexpr uint8_t testValue = 0x10; // 18 decimal
+    constexpr uint8_t testValue = 0x10; // 16 decimal
 
-    constexpr uint8_t testOverflowValue = 0XFF; // 18 decimal
+    constexpr uint8_t testOverflowValue = 0XFF;
 
     // 0x3E MEANS LD A,D8...
     constexpr uint8_t addInstruction[] = {0x3E, testOverflowValue, 0x87}; // ADD A, A
@@ -243,25 +239,25 @@ void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulat
 
     // 16-bit ALU instructions
     RunProgram(emulator, emulationCtx, ldHLInstruction, sizeof(ldHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_HL_OFFSET] == (testValueHigh << 8 | testValueLow)) << "LD HL, nn";
+    EXPECT_TRUE(emulationCtx->registers->HL == (testValueHigh << 8 | testValueLow)) << "LD HL, nn";
 
     RunProgram(emulator, emulationCtx, addHLBCInstruction, sizeof(addHLBCInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_HL_OFFSET] == 0xDFBC) << "ADD HL, BC";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0xDFBC) << "ADD HL, BC";
 
     RunProgram(emulator, emulationCtx, addHLDEInstruction, sizeof(addHLDEInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_HL_OFFSET] == 0x210B) << "ADD HL, DE";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0x210B) << "ADD HL, DE";
 
     RunProgram(emulator, emulationCtx, addHLHLInstruction, sizeof(addHLHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_HL_OFFSET] == 0x2468) << "ADD HL, HL";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0x2468) << "ADD HL, HL";
 
     RunProgram(emulator, emulationCtx, addHLSPInstruction, sizeof(addHLSPInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_HL_OFFSET] == 0x6ACE) << "ADD HL, SP";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0x6ACE) << "ADD HL, SP";
 
     RunProgram(emulator, emulationCtx, incHLInstruction, sizeof(incHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_HL_OFFSET] == 0x0000) << "INC HL";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0x0000) << "INC HL";
 
     RunProgram(emulator, emulationCtx, decHLInstruction, sizeof(decHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->CPU[GB_HL_OFFSET] == 0xFFFF) << "DEC HL";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0xFFFF) << "DEC HL";
 }
 
 // Test case for 8-bit load/store instructions

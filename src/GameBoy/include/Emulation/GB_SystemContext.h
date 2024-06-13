@@ -12,6 +12,7 @@ typedef struct
     // CPU STATE
     uint8_t         IE;
     uint8_t         HALT;
+    
     uint8_t         *memory;
     GB_Registers    *registers;
     // Cartige

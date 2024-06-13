@@ -3,18 +3,6 @@
 
 #include <stdint.h>
 
-/*
-    posible structure for registers, put this inside of a structure:
-    union {
-        struct {
-            u16 AF, BC, DE, HL;
-        } reg16;
-        struct {
-            u8 F, A, C, B, E, D, L, H;
-        } reg8;
-    };
-*/
-
 // 16 bit registers instruction encoding offests
 #define GB_BC_OFFSET 0
 #define GB_DE_OFFSET 1
@@ -52,7 +40,7 @@
 
 typedef struct 
 {
-    // BIG MF TODO: FIX THIS FUCKING UNION AND AVOID USING CPU[] AS MAIN REGISTER ACCESS
+    // BIG MF TODO: FIX THIS FUCKING UNION AND AVOID USING FILE_16[] AS MAIN REGISTER ACCESS
      union {
         struct {
             uint8_t B;
@@ -70,7 +58,8 @@ typedef struct
             uint16_t HL;
             uint16_t AF;
         };
-        uint16_t CPU[4];
+        uint8_t  FILE_8[8];
+        uint16_t FILE_16[4];
     };
     uint16_t SP;
     uint16_t PC;

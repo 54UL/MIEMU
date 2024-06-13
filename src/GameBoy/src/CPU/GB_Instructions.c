@@ -81,7 +81,7 @@ uint8_t GB_LD_A_BC(EmulationState *ctx)
     /*
         A = read(BC)
     */
-    ctx->registers->FILE_16[GB_AF_OFFSET] = GB_BusRead(ctx, ctx->registers->FILE_16[GB_BC_OFFSET]);
+    ctx->registers->A = GB_BusRead(ctx, ctx->registers->BC);
 }
 
 uint8_t GB_LD_A_DE(EmulationState *ctx)
@@ -90,8 +90,7 @@ uint8_t GB_LD_A_DE(EmulationState *ctx)
     /*
         A = read(DE)
     */
-   
-    GB_SetReg8(ctx, GB_A_OFFSET, GB_BusRead(ctx, ctx->registers->FILE_16[GB_DE_OFFSET]));
+   ctx->registers->A = GB_BusRead(ctx, ctx->registers->DE);
 }
 
 uint8_t GB_LD_A_NN(EmulationState *ctx)
@@ -116,9 +115,9 @@ uint8_t GB_LD_BC_A(EmulationState *ctx)
         write(BC, A)
     */
 
-    //TODO: FIX GB_GetReg8(ctx, GB_A_OFFSET) for getting the A reg instead of (HL) due to register instruction index encoding
+    //TODO: FIX ctx->registers->A for getting the A reg instead of (HL) due to register instruction index encoding
     //TODO: Also this applies for GB_SetReg8
-    GB_BusWrite(ctx, ctx->registers->FILE_16[GB_BC_OFFSET], GB_GetReg8(ctx, GB_A_OFFSET));
+    GB_BusWrite(ctx, ctx->registers->BC, ctx->registers->A);
 }
 
 uint8_t GB_LD_DE_A(EmulationState *ctx)
@@ -127,7 +126,7 @@ uint8_t GB_LD_DE_A(EmulationState *ctx)
     /*
         write(DE, A)
     */
-    GB_BusWrite(ctx, ctx->registers->FILE_16[GB_DE_OFFSET], GB_GetReg8(ctx, GB_A_OFFSET));
+    GB_BusWrite(ctx, ctx->registers->DE, ctx->registers->A);
 }
 
 uint8_t GB_LD_NN_A(EmulationState *ctx)
@@ -141,7 +140,7 @@ uint8_t GB_LD_NN_A(EmulationState *ctx)
     const uint8_t msb = GB_BusRead(ctx, ctx->registers->PC++);
     const uint16_t nn = (uint16_t)(lsb | (msb << 8));
 
-    GB_BusWrite(ctx, nn,  GB_GetReg8(ctx, GB_A_OFFSET));
+    GB_BusWrite(ctx, nn,  ctx->registers->A);
 }
 
 uint8_t GB_LDH_A_N(EmulationState *ctx)
@@ -169,7 +168,7 @@ uint8_t GB_LDH_N_A(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
     const uint16_t u16 = (uint16_t)(n | (0xFF << 8));
 
-    GB_BusWrite(ctx, u16,  GB_GetReg8(ctx, GB_A_OFFSET));
+    GB_BusWrite(ctx, u16,  ctx->registers->A);
 }
 
 uint8_t GB_LDH_A_C(EmulationState *ctx)
@@ -178,7 +177,7 @@ uint8_t GB_LDH_A_C(EmulationState *ctx)
     /*
         A = read(unsigned_16(lsb=C, msb=0xFF))
     */
-    const uint16_t u16 = (uint16_t)(GB_GetReg8(ctx, GB_C_OFFSET) | (0xFF << 8));
+    const uint16_t u16 = (uint16_t)(ctx->registers->C | (0xFF << 8));
     GB_SetReg8(ctx, GB_A_OFFSET, GB_BusRead(ctx, u16));
 }
 
@@ -188,8 +187,8 @@ uint8_t GB_LDH_C_A(EmulationState *ctx)
     /*
         write(unsigned_16(lsb=C, msb=0xFF), A)
     */
-    const uint16_t u16 = (uint16_t)(GB_GetReg8(ctx, GB_C_OFFSET) | (0xFF << 8));
-    GB_BusWrite(ctx, u16, GB_GetReg8(ctx, GB_A_OFFSET));
+    const uint16_t u16 = (uint16_t)(ctx->registers->C | (0xFF << 8));
+    GB_BusWrite(ctx, u16, ctx->registers->A);
 }
 
 uint8_t GB_LDI_HL_A(EmulationState *ctx)
@@ -198,7 +197,7 @@ uint8_t GB_LDI_HL_A(EmulationState *ctx)
     /*
         write(HL++, A)
     */
-    GB_BusWrite(ctx, ctx->registers->HL++, GB_GetReg8(ctx, GB_A_OFFSET));
+    GB_BusWrite(ctx, ctx->registers->HL++, ctx->registers->A);
 }
 
 uint8_t GB_LDI_A_HL(EmulationState *ctx)
@@ -217,7 +216,7 @@ uint8_t GB_LDD_HL_A(EmulationState *ctx)
         write(HL--, A)
     */
 
-    GB_BusWrite(ctx, ctx->registers->HL--, GB_GetReg8(ctx, GB_A_OFFSET));
+    GB_BusWrite(ctx, ctx->registers->HL--, ctx->registers->A);
 }
 
 uint8_t GB_LDD_A_HL(EmulationState *ctx)
@@ -317,12 +316,12 @@ uint8_t GB_ADD_A_R(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t a = GB_GetReg8(ctx, GB_A_OFFSET);
+    const uint8_t a = ctx->registers->A;
     const uint8_t r = GB_GetReg8(ctx, rr);
 
     const uint16_t sum =  a + r;
 
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -350,8 +349,8 @@ uint8_t GB_ADD_A_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint16_t sum =  GB_GetReg8(ctx, GB_A_OFFSET) + n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const uint16_t sum =  ctx->registers->A + n;
+    ctx->registers->A = sum;
     
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -377,8 +376,8 @@ uint8_t GB_ADD_A_HL(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) + n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A + n;
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -407,8 +406,8 @@ uint8_t GB_ADC_A_R(EmulationState *ctx)
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const uint16_t sum =  GB_GetReg8(ctx, GB_A_OFFSET) + c + GB_GetReg8(ctx, rr);
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const uint16_t sum =  ctx->registers->A + c + GB_GetReg8(ctx, rr);
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -438,8 +437,8 @@ uint8_t GB_ADC_A_N(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) + c + n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A + c + n;
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -469,8 +468,8 @@ uint8_t GB_ADC_A_HL(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) + c + n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A + c + n;
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -497,8 +496,8 @@ uint8_t GB_SUB_R(EmulationState *ctx)
     */
 
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) - GB_GetReg8(ctx, rr);
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A - GB_GetReg8(ctx, rr);
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -524,8 +523,8 @@ uint8_t GB_SUB_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) - n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A - n;
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -551,8 +550,8 @@ uint8_t GB_SUB_HL(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) - n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A - n;
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -578,8 +577,8 @@ uint8_t GB_SBC_A_R(EmulationState *ctx)
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) - c - GB_GetReg8(ctx, rr);
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A - c - GB_GetReg8(ctx, rr);
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -606,8 +605,8 @@ uint8_t GB_SBC_A_N(EmulationState *ctx)
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) - c - n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A - c - n;
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -635,8 +634,8 @@ uint8_t GB_SBC_A_HL(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const int sum =  GB_GetReg8(ctx, GB_A_OFFSET) - c - n;
-    GB_SetReg8(ctx, GB_A_OFFSET, sum);
+    const int sum =  ctx->registers->A - c - n;
+    ctx->registers->A = sum;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sum == 0);
@@ -657,8 +656,8 @@ uint8_t GB_AND_R(EmulationState *ctx)
     flags.Z = 1 if result == 0 else 0
     */
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
-    uint8_t and = GB_GetReg8(ctx,GB_A_OFFSET) & GB_GetReg8(ctx, r);
-    GB_SetReg8(ctx, GB_A_OFFSET, and);
+    uint8_t and = ctx->registers->A & GB_GetReg8(ctx, r);
+    ctx->registers->A = and;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, and == 0);
@@ -680,8 +679,8 @@ uint8_t GB_AND_N(EmulationState *ctx)
     flags.C = 0
     */
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    uint8_t and = GB_GetReg8(ctx,GB_A_OFFSET) & n;
-    GB_SetReg8(ctx, GB_A_OFFSET, and);
+    uint8_t and = ctx->registers->A & n;
+    ctx->registers->A = and;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, and == 0);
@@ -706,8 +705,8 @@ uint8_t GB_AND_HL(EmulationState *ctx)
     flags.C = 0
     */
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    uint8_t and = GB_GetReg8(ctx,GB_A_OFFSET) & data;
-    GB_SetReg8(ctx, GB_A_OFFSET, and);
+    uint8_t and = ctx->registers->A & data;
+    ctx->registers->A = and;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, and == 0);
@@ -733,7 +732,7 @@ uint8_t GB_XOR_R(EmulationState *ctx)
     flags.C = 0
     */
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
-    uint8_t xor = GB_GetReg8(ctx,GB_A_OFFSET) ^ GB_GetReg8(ctx, r);
+    uint8_t xor = ctx->registers->A ^ GB_GetReg8(ctx, r);
     GB_SetReg8(ctx, GB_A_OFFSET, xor);
 
     GB_TMP_F();
@@ -759,7 +758,7 @@ uint8_t GB_XOR_N(EmulationState *ctx)
         flags.C = 0
     */
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    uint8_t xor = GB_GetReg8(ctx,GB_A_OFFSET) ^ n;
+    uint8_t xor = ctx->registers->A ^ n;
     GB_SetReg8(ctx, GB_A_OFFSET, xor);
 
     GB_TMP_F();
@@ -786,7 +785,7 @@ uint8_t GB_XOR_HL(EmulationState *ctx)
     */
 
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    uint8_t xor = GB_GetReg8(ctx,GB_A_OFFSET) ^ data;
+    uint8_t xor = ctx->registers->A ^ data;
     GB_SetReg8(ctx, GB_A_OFFSET, xor);
 
     GB_TMP_F();
@@ -811,7 +810,7 @@ uint8_t GB_OR_R(EmulationState *ctx)
     */
 
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
-    uint8_t or = GB_GetReg8(ctx,GB_A_OFFSET) | GB_GetReg8(ctx, r);
+    uint8_t or = ctx->registers->A | GB_GetReg8(ctx, r);
     GB_SetReg8(ctx, GB_A_OFFSET, or);
 
     GB_TMP_F();
@@ -836,7 +835,7 @@ uint8_t GB_OR_N(EmulationState *ctx)
         flags.C = 0
     */
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    uint8_t or = GB_GetReg8(ctx,GB_A_OFFSET) | n;
+    uint8_t or = ctx->registers->A | n;
     GB_SetReg8(ctx, GB_A_OFFSET, or);
 
     GB_TMP_F();
@@ -861,7 +860,7 @@ uint8_t GB_OR_HL(EmulationState *ctx)
         flags.C = 0
     */
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    uint8_t or = GB_GetReg8(ctx,GB_A_OFFSET) | data;
+    uint8_t or = ctx->registers->A | data;
     GB_SetReg8(ctx, GB_A_OFFSET, or);
 
     GB_TMP_F();
@@ -885,7 +884,7 @@ uint8_t GB_CP_R(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t sub =  GB_GetReg8(ctx, GB_A_OFFSET) - GB_GetReg8(ctx, r);
+    const uint8_t sub =  ctx->registers->A - GB_GetReg8(ctx, r);
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sub == 0);
@@ -910,7 +909,7 @@ uint8_t GB_CP_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t sub =  GB_GetReg8(ctx, GB_A_OFFSET) - n;
+    const uint8_t sub =  ctx->registers->A - n;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sub == 0);
@@ -934,7 +933,7 @@ uint8_t GB_CP_HL(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    const uint8_t sub =  GB_GetReg8(ctx, GB_A_OFFSET) - data;
+    const uint8_t sub =  ctx->registers->A - data;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, sub == 0);
@@ -1063,7 +1062,7 @@ uint8_t GB_CPL(EmulationState *ctx)
     flags.N = 1
     flags.H = 1
     */
-    uint8_t A = GB_GetReg8(ctx, GB_A_OFFSET);
+    uint8_t A = ctx->registers->A;
     GB_SetReg8(ctx, GB_A_OFFSET, ~A);
 
     GB_TMP_F();
@@ -1181,8 +1180,8 @@ uint8_t GB_RLCA(EmulationState *ctx)
         rotate A left trough carry
     */   
    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-   uint8_t shifted = GB_GetReg8(ctx, GB_A_OFFSET) << 1 << c;
-   GB_SetReg8(ctx, GB_A_OFFSET, shifted);
+   uint8_t shifted = ctx->registers->A << 1 << c;
+   ctx->registers->A = shifted;
    
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, 0);
@@ -1201,8 +1200,8 @@ uint8_t GB_RLA(EmulationState *ctx)
         rotate A left
     */
 
-   uint8_t shifted = GB_GetReg8(ctx, GB_A_OFFSET) << 1;
-   GB_SetReg8(ctx, GB_A_OFFSET, shifted);
+   uint8_t shifted = ctx->registers->A << 1;
+   ctx->registers->A = shifted;
    
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, 0);
@@ -1221,8 +1220,8 @@ uint8_t GB_RRCA(EmulationState *ctx)
         rotate right A through carry
     */
     const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-    uint8_t shifted = GB_GetReg8(ctx, GB_A_OFFSET) >> 1 >> c;
-    GB_SetReg8(ctx, GB_A_OFFSET, shifted);
+    uint8_t shifted = ctx->registers->A >> 1 >> c;
+    ctx->registers->A = shifted;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, 0);
@@ -1240,8 +1239,8 @@ uint8_t GB_RRA(EmulationState *ctx)
     /*
         rotate A right 
     */
-    uint8_t shifted = GB_GetReg8(ctx, GB_A_OFFSET) >> 1;
-    GB_SetReg8(ctx, GB_A_OFFSET, shifted);
+    uint8_t shifted = ctx->registers->A >> 1;
+    ctx->registers->A = shifted;
 
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, 0);

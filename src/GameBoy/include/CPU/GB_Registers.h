@@ -27,8 +27,6 @@
 #define GB_H_FLAG       5
 #define GB_C_FLAG       4
 
-//BRIEF: This is used for checking decoded 'r' value is an HL indirect addressing mode (NOT THE SAME AS THE GB_HL_OFFSET)
-
 //TODO: WHEN WIDELY USED CHECK PERFORMANCE REPLACING FOR A FUNCTION...
 //TODO: REFACTORIZE  AND REMOVE USELESS SHIT: like the tmpRegF fuckery
 #define GB_U8_TO_U16(LSB, MSB) (uint16_t)(lsb | (msb << 8))

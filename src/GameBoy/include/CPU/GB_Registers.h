@@ -28,7 +28,7 @@
 #define GB_C_FLAG       4
 
 //TODO: WHEN WIDELY USED CHECK PERFORMANCE REPLACING FOR A FUNCTION...
-//TODO: REFACTORIZE  AND REMOVE USELESS SHIT: like the tmpRegF fuckery
+//TODO: REFACTORIZE  AND REMOVE USELESS SHIT: like the tmpRegF fuckery (FOR FUCKING REAL)
 #define GB_U8_TO_U16(LSB, MSB) (uint16_t)(lsb | (msb << 8))
 #define GB_F_OR_AF(CTX, F_TMP) CTX->registers->F |= (F_TMP & 0xFF)
 #define GB_A_OR_AF(CTX, A) CTX->registers->F |= ((A << 8) & 0XFF00)

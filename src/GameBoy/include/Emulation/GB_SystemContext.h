@@ -10,6 +10,7 @@
 typedef struct
 {
     // Main memory and cpu regs    
+    uint8_t ime;
     uint8_t         *memory;
     GB_Registers    *registers;
     // Cartige

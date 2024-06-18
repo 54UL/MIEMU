@@ -1470,18 +1470,40 @@ uint8_t GB_CCF(EmulationState *ctx)
 {
     // encoding: 3F
     /*
-        cy=cy xor 1 
+        flags.N = 0
+        flags.H = 0
+        flags.C = ~flags.C
     */
-   return 1; // TODO: CHECK  TIMING...
+    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
+
+    GB_TMP_F();
+    GB_SET_F(GB_N_FLAG, 0);
+    GB_SET_F(GB_H_FLAG, 0);
+    GB_SET_F(GB_C_FLAG, c);
+
+    // Used to set F reg
+    GB_F_OR_AF(ctx, tmpRegF);
+
+    return 1;
 }
 
 uint8_t GB_SCF(EmulationState *ctx)
 {
     // encoding: 37
     /*
-        cy=1
+        flags.N = 0
+        flags.H = 0
+        flags.C = 1
     */
-   return 1; // TODO: CHECK  TIMING...
+    GB_TMP_F();
+    GB_SET_F(GB_N_FLAG, 0);
+    GB_SET_F(GB_H_FLAG, 0);
+    GB_SET_F(GB_C_FLAG, 1);
+
+    // Used to set F reg
+    GB_F_OR_AF(ctx, tmpRegF);
+
+   return 1;
 }
 
 uint8_t GB_NOP(EmulationState *ctx)
@@ -1499,7 +1521,8 @@ uint8_t GB_HALT(EmulationState *ctx)
     /*
         halt until interrupt occurs (low power)
     */
-   return 1; // TODO: CHECK  TIMING...
+   
+   return 0;// RETURNING 0 HALTS THE EMULATOR CLOCK(0 CLOCK CYCLES)...
 }
 
 uint8_t GB_STOP(EmulationState *ctx)
@@ -1508,7 +1531,8 @@ uint8_t GB_STOP(EmulationState *ctx)
     /*
         low power standby mode (VERY low power)
     */
-   return 1; // TODO: CHECK  TIMING...
+
+   return 0; // stop the emulation by returning 0
 }
 
 uint8_t GB_DI(EmulationState *ctx)
@@ -1517,7 +1541,9 @@ uint8_t GB_DI(EmulationState *ctx)
     /*
         disable interrupts, IME=0  
     */
-   return 1; // TODO: CHECK  TIMING...
+   ctx->ime = 0x00;
+   
+   return 1;
 }
 
 uint8_t GB_EI(EmulationState *ctx)
@@ -1526,7 +1552,9 @@ uint8_t GB_EI(EmulationState *ctx)
     /*
         enable interrupts, IME=1 
     */
-   return 1; // TODO: CHECK  TIMING...
+   ctx->ime = 0x01;
+
+   return 1;
 }
 
 // JUMP INSTRUCTIONS

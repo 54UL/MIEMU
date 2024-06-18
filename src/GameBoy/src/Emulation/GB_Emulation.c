@@ -15,35 +15,31 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         // TODO: INSTRUCTIONS WITH R PREFIX HAVE MISSING CASES..
         // 8-BIT LOAD INSTRUCTIONS
         //-------------MASK----OPCODE--HANDLER
+        GB_INSTRUCTION(0xFF, 0x0000, GB_NOP),
+
         // LD_R_R
-        GB_INSTRUCTION(0xFF, 0x0046, GB_LD_R_R),
-        GB_INSTRUCTION(0xFF, 0x004E, GB_LD_R_R),
-        GB_INSTRUCTION(0xFF, 0x0056, GB_LD_R_R),
-        GB_INSTRUCTION(0xFF, 0x005E, GB_LD_R_R),
-        GB_INSTRUCTION(0xFF, 0x0066, GB_LD_R_R),
-        GB_INSTRUCTION(0xFF, 0x006E, GB_LD_R_R),
-        GB_INSTRUCTION(0xFF, 0x0076, GB_LD_R_R),
-        GB_INSTRUCTION(0xFF, 0x0078, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x0046, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x004E, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x0056, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x005E, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x0066, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x006E, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x0076, GB_LD_R_R),
+        // GB_INSTRUCTION(0xFF, 0x0078, GB_LD_R_R),
+        GB_INSTRUCTION(0XC0, 0x40, GB_LD_R_R),
 
         // LD_R_N
-        GB_INSTRUCTION(0xFF, 0x0006, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x000E, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x0016, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x001E, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x0026, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x002E, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x0036, GB_LD_R_N),
-        GB_INSTRUCTION(0xFF, 0x003E, GB_LD_R_N),
+        GB_INSTRUCTION(0xC7, 0x0006, GB_LD_R_N),
 
         // LD_R_HL
-        GB_INSTRUCTION(0X7E, 0X7E, GB_LD_R_HL),
+        GB_INSTRUCTION(0xC7, 0x46, GB_LD_R_HL),
 
         // 16 BIT LOAD INSTRUCTIONS
-        GB_INSTRUCTION(0x00CF, 0x0001, GB_LD_RR_NN),
-        GB_INSTRUCTION(0xFFFF, 0x0000, GB_LD_NN_SP),
-        GB_INSTRUCTION(0xFFFF, 0x00F9, GB_LD_SP_HL),
-        GB_INSTRUCTION(0x00CF, 0x00C5, GB_PUSH_RR),
-        GB_INSTRUCTION(0x00CF, 0x00D1, GB_POP_RR),
+        GB_INSTRUCTION(0xCF, 0x01, GB_LD_RR_NN),
+        GB_INSTRUCTION(0xFF, 0x08, GB_LD_NN_SP),
+        GB_INSTRUCTION(0xFF, 0xF9, GB_LD_SP_HL),
+        GB_INSTRUCTION(0xCF, 0xC5, GB_PUSH_RR),
+        GB_INSTRUCTION(0xCF, 0xC1, GB_POP_RR),
 
         // 8 BIT ALU
         GB_INSTRUCTION(0xF8, 0x80, GB_ADD_A_R),
@@ -78,11 +74,11 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x2F, GB_CPL),
 
         // 16 BIT ALU INSTRUCTIONS
-        GB_INSTRUCTION(0xFF00, 0x0900, GB_ADD_HL_RR),
-        GB_INSTRUCTION(0xFF00, 0x0300, GB_INC_RR),
-        GB_INSTRUCTION(0xFF00, 0x0B00, GB_DEC_RR),
-        GB_INSTRUCTION(0xFF00, 0xE800, GB_ADD_SP_DD),
-        GB_INSTRUCTION(0xFFFF, 0xF800, GB_LD_HL_SP_PLUS_DD),
+        GB_INSTRUCTION(0xCF, 0x09, GB_ADD_HL_RR),
+        GB_INSTRUCTION(0xCF, 0x03, GB_INC_RR),
+        GB_INSTRUCTION(0XCB, 0x0B, GB_DEC_RR),
+        GB_INSTRUCTION(0xFF, 0xE8, GB_ADD_SP_DD),
+        GB_INSTRUCTION(0xFF, 0xF8, GB_LD_HL_SP_PLUS_DD),
 
         // CPU CONTROL INSTRUCTIONS
         // GB_INSTRUCTION(0xFFFF, 0x003F, GB_CCF),
@@ -248,7 +244,6 @@ int GB_TickEmulation()
     //TODO: Implement CPU step function that take into account prefetch cycle (before executing an instruction fetch another one then execute both in order)
     
     if (s_systemContext == NULL) return 0;
-
     // Fetch
     const uint8_t instr = s_systemContext->memory[s_systemContext->registers->PC++]; //TODO: CHANGE THIS FOR A BUS READ!!!
     
@@ -256,27 +251,22 @@ int GB_TickEmulation()
     uint8_t clockCycles = 0;
 
     // Instruction execution
-    if (fetchedInstruction != NULL) 
+    if (fetchedInstruction->handler != NULL) 
     {
-
-        if (fetchedInstruction->opcode != 0) // If opcode is 0 then is an NOP... 
-        {
 #ifdef GB_DEBUG
             MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC);
 #endif
             s_systemContext->registers->INSTRUCTION = instr;
             clockCycles = fetchedInstruction->handler(s_systemContext);
            
-            return 1; //TODO: returning 1 means no fucking nops executed...
-        }
-            //TODO: ADD BELOW DELTA TIME DELAY TO IMPLEMENT CLOCK CYCLES TIMING
-
-         return 0;
+         return clockCycles;
     }
     else
     {
         s_systemContext->registers->INSTRUCTION = GB_INVALID_INSTRUCTION; // Invalidate last instruction entry
-        MNE_Log("[INVALID INSTR]: %04X]\n", instr);
+        s_systemContext->memory[GB_HALT_REGISTER] = 0x01; // TODO: IT MAY B NEEDED USING BUS WRITE TO TRIGGER REGISTER BEHEAVIOURS
+
+        MNE_Log("[INVALID INSTRUCTION]:[%02X][HALTED]\n", instr);
         return 0;
     }
 }
@@ -287,7 +277,7 @@ GameBoyInstruction* GB_FetchInstruction(const uint8_t opcode)
     {
         uint16_t opmask = (opcode & s_gb_instruction_set[i].maskl);
 
-        if ((opmask == s_gb_instruction_set[i].opcode))
+        if (opmask == s_gb_instruction_set[i].opcode)
         {
             return &s_gb_instruction_set[i];
         }

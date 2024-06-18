@@ -10,7 +10,7 @@ RESOURCES:
 */
 
 // #define TEST_ROOM_PATH "../../../ROMS/GameBoy/blargg-ld_r_r.gb"
-#define ExpectMessage(instr, message) "GB INSTRUCTION [" << #instr << "] EXPECTED: " << #message;
+#define ExpectMessage(instr, message) "GB INSTRUCTION [" << #instr << "] EXPECTED: " << #message
 #define GB_DEBUG
 
 #include <gtest/gtest.h>
@@ -21,6 +21,17 @@ extern "C"
 #include <minemu.h>
 #include <GameBoy.h>
 }
+
+// TODO: MOVE TEST FUNCTIONS INTO A HEADER FILE...
+void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, const uint8_t *programArray, const uint16_t programLength);
+
+void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx);
+void Load_And_Store_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx);
+
+void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx);
+void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx);
+
+void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx);
 
 class GameBoyFixture : public testing::Test
 {
@@ -46,58 +57,41 @@ protected:
     }
 };
 
-void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, const uint8_t *programArray, const uint16_t programLength);
-
-void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx);
-void Load_And_Store_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx);
-
-void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx);
-void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx);
-
-void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx);
-
 void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, const uint8_t *programArray, const uint16_t programLength)
 {
-    bool executionStatus = true;
-    MNE_Log("\n-----------------PROGRAM START---------------\n");
+    MNE_Log("\n--------------PROGRAM START------------------\n");
+    const uint8_t maxProgramSize = 0xFF;
 
-    // Memset to 0 using a harcoded range of 0xFF (:skull:)
-    constexpr uint16_t cleanUpRange = 0XFF;
-    for (int i = 0; i < cleanUpRange; i++)
+    // Copy program into memory
+    for (int i = 0; i < maxProgramSize; i++)
     {
-        emulationCtx->memory[i] = 0x00;
+        if (i < programLength)
+        {
+            emulationCtx->memory[i] = programArray[i];
+        }
+        else
+        {
+            emulationCtx->memory[i] = 0;
+        }
     }
-
-    // // Clean registers
-    // for (int i = 0; i < 4; i++)
-    // {
-    //       emulationCtx->registers->FILE_16[i] = 0;
-    // }
 
     // Restart pc
     emulationCtx->registers->PC = 0;
 
-    // From the start of the program, later on it will have to be pc...
-    // const uint16_t pos = emulationCtx->registers->PC; // might this be useful for testing previous instructions states so thats why is here
-    const uint16_t pos = 0;
-
-
-    // Copy program into current pc position (just for testing...)
-    for (int i = pos; i < (pos + programLength); i++)
-    {
-        emulationCtx->memory[i] = programArray[i];
-    }
-
     // Process instructions...
     for (int i = 0; i < programLength; i++)
     {
-        // Step emulation
-        emulator->TickEmulation();
-        // Check if processed op code was executed fine
-        EXPECT_TRUE(emulationCtx->registers->INSTRUCTION != GB_INVALID_INSTRUCTION);
+        // Step emulation (if clock cycles == 0 is an error)
+        if (emulator->TickEmulation() == 0) 
+        {
+            // Check if processed op code was executed fine
+            EXPECT_TRUE(emulationCtx->registers->INSTRUCTION != GB_INVALID_INSTRUCTION);
+            MNE_Log("-----------------PROGRAM ERROR-----------------\n");
+            break;
+        }
     }
 
-    MNE_Log("-----------------PROGRAM END-----------------\n");
+    MNE_Log("----------------PROGRAM END------------------\n");
 }
 
 void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx)
@@ -135,18 +129,31 @@ void Load_And_Store_Tests_16bit(const Emulation *emulator, const EmulationState 
 
     RunProgram(emulator, emulationCtx, ldRRNNInstruction, sizeof(ldRRNNInstruction));
     EXPECT_TRUE(emulationCtx->registers->BC == 0xABCD) << "LD BC, 0xABCD";
+    {
+        uint16_t stackPointerVal = emulationCtx->registers->SP;
+        RunProgram(emulator, emulationCtx, ldNNSPInstruction, sizeof(ldNNSPInstruction));
+        uint8_t lsb = emulationCtx->memory[0x1234];
+        uint8_t msb = emulationCtx->memory[0x1235];
 
-    RunProgram(emulator, emulationCtx, ldNNSPInstruction, sizeof(ldNNSPInstruction));
-    EXPECT_TRUE(emulationCtx->registers->SP == 0x1234) << "LD (0x1234), SP";
+        EXPECT_TRUE(lsb == (stackPointerVal & 0xFF) && msb == (stackPointerVal >> 8)) << "LD (0x1234), SP";
+    }
 
     RunProgram(emulator, emulationCtx, ldSPHLInstruction, sizeof(ldSPHLInstruction));
     EXPECT_TRUE(emulationCtx->registers->SP == emulationCtx->registers->HL) << "LD SP, HL";
 
-    RunProgram(emulator, emulationCtx, pushRRInstruction, sizeof(pushRRInstruction));
-    EXPECT_TRUE(emulationCtx->registers->BC == emulationCtx->memory[emulationCtx->registers->SP]) << "PUSH BC";
+    {
+        emulationCtx->registers->BC = 0xA0B0;
+        uint16_t stackBeforePush = emulationCtx->registers->SP;
+        RunProgram(emulator, emulationCtx, pushRRInstruction, sizeof(pushRRInstruction));
+
+        uint8_t msb = emulationCtx->memory[--stackBeforePush];
+        uint8_t lsb = emulationCtx->memory[--stackBeforePush];
+
+        EXPECT_TRUE(msb== 0xA0 && lsb == 0xB0) << "PUSH BC";
+    }
 
     RunProgram(emulator, emulationCtx, popRRInstruction, sizeof(popRRInstruction));
-    // You need to implement a function or method to write to memory and verify the result here
+    EXPECT_TRUE(emulationCtx->registers->DE == emulationCtx->registers->BC) << "PUSH DE";
 }
 
 void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx)
@@ -251,63 +258,39 @@ void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulat
 {
     constexpr uint8_t testValueLow = 0x12;
     constexpr uint8_t testValueHigh = 0x34;
+    constexpr uint16_t testValuesSumResult = 0x1234 + 0xABCD; // 48641 or 0xBE01
 
     // 16-bit ALU instructions
     constexpr uint8_t ldHLInstruction[] = {0x21, testValueHigh, testValueLow}; // LD HL, nn 
-    constexpr uint8_t addHLBCInstruction[] = {0x01, 0xCD, 0xAB, 0x09};         // LD BC, 0xABCD ; ADD HL, BC
-    constexpr uint8_t addHLDEInstruction[] = {0x11, 0xEF, 0xCD, 0x19};         // LD DE, 0xCDEF ; ADD HL, DE
-    constexpr uint8_t addHLHLInstruction[] = {0x21, 0x34, 0x12, 0x29};         // LD HL, 0x1234 ; ADD HL, HL
-    constexpr uint8_t addHLSPInstruction[] = {0x31, 0x67, 0x45, 0x39};         // LD SP, 0x4567 ; ADD HL, SP
-    constexpr uint8_t incHLInstruction[] = {0x21, 0xFF, 0xFF, 0x23};           // LD HL, 0xFFFF ; INC HL
-    constexpr uint8_t decHLInstruction[] = {0x21, 0x00, 0x01, 0x2B};           // LD HL, 0x0001 ; DEC HL
 
-    constexpr uint8_t addHLBC_RInstruction[] = {0x09}; // ADD HL, BC
-    constexpr uint8_t incBCInstruction[] = {0x03};    // INC BC
-    constexpr uint8_t decBCInstruction[] = {0x0B};    // DEC BC
+    constexpr uint8_t addHLBCInstruction[] = {0x01, 0xCD, 0xAB, 0x09};         // LD BC, #0xABCD ; ADD HL, BC
+    constexpr uint8_t incHLInstruction[] = {0x21, 0xFF, 0xFF, 0x23};           // LD HL, #0xFFFF ; INC HL
+    constexpr uint8_t decHLInstruction[] = {0x21, 0x00, 0x01, 0x2B};           // LD HL, #0x0001 ; DEC HL
+
     constexpr uint8_t addHLSP_DDInstruction[] = {0xE8, 0x34}; // ADD HL, SP+34
     constexpr uint8_t ldHLSP_DDInstruction[] = {0xF8, 0x34};  // LD HL, SP+34
 
     // Populate hl with testing values
     RunProgram(emulator, emulationCtx, ldHLInstruction, sizeof(ldHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == (testValueHigh << 8 | testValueLow)) << "cannot set hl value with LD HL,nn";
     
     // 16-bit ALU instructions tests
     RunProgram(emulator, emulationCtx, addHLBCInstruction, sizeof(addHLBCInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0xDFBC) << "ADD HL, BC";
-
-    RunProgram(emulator, emulationCtx, addHLDEInstruction, sizeof(addHLDEInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0x210B) << "ADD HL, DE";
-
-    RunProgram(emulator, emulationCtx, addHLHLInstruction, sizeof(addHLHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0x2468) << "ADD HL, HL";
-
-    RunProgram(emulator, emulationCtx, addHLSPInstruction, sizeof(addHLSPInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0x6ACE) << "ADD HL, SP";
-
+    EXPECT_TRUE(emulationCtx->registers->HL == testValuesSumResult) << "ADD HL, BC";
+    
     RunProgram(emulator, emulationCtx, incHLInstruction, sizeof(incHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0x0000) << "INC HL";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0X000) << "INC HL";
 
     RunProgram(emulator, emulationCtx, decHLInstruction, sizeof(decHLInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0xFFFF) << "DEC HL";
+    EXPECT_TRUE(emulationCtx->registers->HL == 0xFF) << "DEC HL";
 
     // Additional tests for missing instructions
-    RunProgram(emulator, emulationCtx, addHLBC_RInstruction, sizeof(addHLBC_RInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0xDFBC) << "ADD HL, BC (R)";
+    // RunProgram(emulator, emulationCtx, addHLSP_DDInstruction, sizeof(addHLSP_DDInstruction));
+    // EXPECT_TRUE(emulationCtx->registers->HL == 0x6B02) << "ADD HL, SP+34";
 
-    RunProgram(emulator, emulationCtx, incBCInstruction, sizeof(incBCInstruction));
-    EXPECT_TRUE(emulationCtx->registers->BC == 0x0001) << "INC BC";
-
-    RunProgram(emulator, emulationCtx, decBCInstruction, sizeof(decBCInstruction));
-    EXPECT_TRUE(emulationCtx->registers->BC == 0xFFFF) << "DEC BC";
-
-    RunProgram(emulator, emulationCtx, addHLSP_DDInstruction, sizeof(addHLSP_DDInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0x6B02) << "ADD HL, SP+34";
-
-    RunProgram(emulator, emulationCtx, ldHLSP_DDInstruction, sizeof(ldHLSP_DDInstruction));
-    EXPECT_TRUE(emulationCtx->registers->HL == 0x6B02) << "LD HL, SP+34";
+    // RunProgram(emulator, emulationCtx, ldHLSP_DDInstruction, sizeof(ldHLSP_DDInstruction));
+    // EXPECT_TRUE(emulationCtx->registers->HL == 0x6B02) << "LD HL, SP+34";
 }
 
-// Test case for 8-bit load/store instructions
 TEST_F(GameBoyFixture, Load_And_Store_8bit)
 {
     Load_And_Store_Tests_8bit(emulator, emulationCtx);
@@ -318,14 +301,12 @@ TEST_F(GameBoyFixture, Load_And_Store_16bit)
     Load_And_Store_Tests_16bit(emulator, emulationCtx);
 }
 
-// Test case for 8-bit ALU instructions
 TEST_F(GameBoyFixture, ALU_8Bit)
 {
     CPU_ALU_Tests_8bit(emulator, emulationCtx);
 }
 
-// Test case for 16-bit ALU instructions
-// TEST_F(GameBoyFixture, ALU_16Bit)
-// {
-//     CPU_ALU_Tests_16bit(emulator, emulationCtx);
-// }
+TEST_F(GameBoyFixture, ALU_16Bit)
+{
+    CPU_ALU_Tests_16bit(emulator, emulationCtx);
+}

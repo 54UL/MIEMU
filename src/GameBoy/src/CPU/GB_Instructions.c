@@ -1,6 +1,7 @@
 #include <CPU/GB_Instructions.h>
 #include <CPU/GB_Bus.h>
 #include <CPU/GB_Registers.h>
+#include <minemu/MNE_Log.h>
 
 /*INSTRUCTIONS TODOS:
 
@@ -249,18 +250,23 @@ uint8_t GB_LD_NN_SP(EmulationState *ctx)
 {
     //encoding: 0b00001000
     /*
-        nn = unsigned_16(lsb=read(PC++), msb=read(PC++))
-        write(nn, lsb(SP))
-        write(nn+1, msb(SP))
+        nn_lsb = read_memory(addr=PC); PC = PC + 1
+        nn_msb = read_memory(addr=PC); PC = PC + 1
+        nn = unsigned_16(lsb=nn_lsb, msb=nn_msb)
+        write_memory(addr=nn, data=lsb(SP)); nn = nn + 1
+        write_memory(addr=nn, data=msb(SP))
     */
+
     const uint8_t lsb = GB_BusRead(ctx, ctx->registers->PC++);
     const uint8_t msb = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint16_t u16 = (uint16_t)(lsb | (msb << 8));
+    
+    const uint16_t indirect_addr = (uint16_t)(lsb | (msb << 8));
+
     const uint8_t spl = ctx->registers->SP & 0xFF;
     const uint8_t sph = (ctx->registers->SP >> 8) & 0xFF;
 
-    GB_BusWrite(ctx, u16, spl);
-    GB_BusWrite(ctx, u16 + 1, sph);
+    GB_BusWrite(ctx, indirect_addr, spl);
+    GB_BusWrite(ctx, indirect_addr + 1, sph);
 }
 
 uint8_t GB_LD_SP_HL(EmulationState *ctx)
@@ -1090,34 +1096,35 @@ uint8_t GB_ADD_HL_RR(EmulationState *ctx)
     */
 
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4; // Extract rr from instruction
-    const uint16_t HL = GB_GetReg16(ctx, GB_HL_OFFSET, REG16_MODE_SP);
-    const uint16_t rr_value = GB_GetReg16(ctx, rr << 4, REG16_MODE_SP);
+    const uint16_t rr_value = GB_GetReg16(ctx, rr, REG16_MODE_SP);
 
     // Calculate the result
-    uint32_t result = HL + rr_value;
+    uint32_t result = ctx->registers->HL + rr_value;
 
     // Update HL with the result
     GB_SetReg16(ctx, GB_HL_OFFSET, (uint16_t)result, REG16_MODE_SP);
+    ctx->registers->HL = result & 0xFFFF;
     
     // Set the flags
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG, 0);
     GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, ((HL & 0xFFF) + (rr_value & 0xFFF)) > 0xFFF);
+    GB_SET_F(GB_H_FLAG, ((ctx->registers->HL & 0xFFF) + (rr_value & 0xFFF)) > 0xFFF);
     GB_SET_F(GB_C_FLAG, result > 0xFFFF);
 
-    return 0;
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_INC_RR(EmulationState *ctx)
 {
-    // encoding: 0b0000rr11
+    // encoding: 0b00xx0011
     /*
         rr = rr+1      ; rr may be BC,DE,HL,SP
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x0C) >> 2; // Extract rr from instruction
+    const uint8_t rr = (ctx->registers->INSTRUCTION & 0X30) >> 4; // Extract rr from instruction
     const uint16_t rrInc = GB_GetReg16(ctx, rr, REG16_MODE_SP) + 1;
     GB_SetReg16(ctx, rr, rrInc, REG16_MODE_SP);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_DEC_RR(EmulationState *ctx)
@@ -1129,6 +1136,7 @@ uint8_t GB_DEC_RR(EmulationState *ctx)
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4; // Extract rr from instruction
     const uint16_t rrDec = GB_GetReg16(ctx, rr, REG16_MODE_SP) - 1;
     GB_SetReg16(ctx, rr, rrDec, REG16_MODE_SP);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_ADD_SP_DD(EmulationState *ctx)
@@ -1138,8 +1146,8 @@ uint8_t GB_ADD_SP_DD(EmulationState *ctx)
         SP = SP +/- dd ; dd is 8-bit signed number
     */
     const char dd = (char) GB_BusRead(ctx, ctx->registers->PC++);
-    const short sum =  GB_GetReg16(ctx, GB_SP_OFFSET, REG16_MODE_SP) + dd;
-    GB_SetReg16(ctx, GB_SP_OFFSET, sum, REG16_MODE_SP);
+    const short sum =  ctx->registers->SP + dd; // TODO: VERIFY CONVERSION
+    ctx->registers->SP = sum;
     
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG,0);
@@ -1149,6 +1157,7 @@ uint8_t GB_ADD_SP_DD(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_LD_HL_SP_PLUS_DD(EmulationState *ctx)
@@ -1159,9 +1168,9 @@ uint8_t GB_LD_HL_SP_PLUS_DD(EmulationState *ctx)
     */
 
     const char dd = (char) GB_BusRead(ctx, ctx->registers->PC++);
-    const short sum =  GB_GetReg16(ctx, GB_SP_OFFSET, REG16_MODE_SP) + dd;
-    GB_SetReg16(ctx, GB_HL_OFFSET, sum, REG16_MODE_SP);
-    
+    const short sum =  ctx->registers->SP + dd; //TODO: check conversion
+    ctx->registers->HL = sum;
+
     GB_TMP_F();
     GB_SET_F(GB_ZERO_FLAG,0);
     GB_SET_F(GB_N_FLAG, 0);
@@ -1170,6 +1179,7 @@ uint8_t GB_LD_HL_SP_PLUS_DD(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 // ROTATE AND SHIFT INSTRUCTIONS
@@ -1191,6 +1201,7 @@ uint8_t GB_RLCA(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RLA(EmulationState *ctx)
@@ -1211,6 +1222,7 @@ uint8_t GB_RLA(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RRCA(EmulationState *ctx)
@@ -1231,13 +1243,14 @@ uint8_t GB_RRCA(EmulationState *ctx)
 
     // Used to set F reg
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RRA(EmulationState *ctx)
 {
     // encoding: 0x1F
     /*
-        rotate A right 
+        rotate A right
     */
     uint8_t shifted = ctx->registers->A >> 1;
     ctx->registers->A = shifted;
@@ -1250,6 +1263,7 @@ uint8_t GB_RRA(EmulationState *ctx)
 
     // Used to set F reg
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 // CB PREFIX INSTRUCTIONS STARTS HERE!!!
@@ -1261,6 +1275,7 @@ uint8_t GB_RLC_R(EmulationState *ctx)
     /*
         rotate left r trough carry
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RLC_HL(EmulationState *ctx)
@@ -1269,6 +1284,7 @@ uint8_t GB_RLC_HL(EmulationState *ctx)
     /*
         rotate left  hl trough carry
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RL_R(EmulationState *ctx)
@@ -1277,6 +1293,7 @@ uint8_t GB_RL_R(EmulationState *ctx)
     /*
         rotate left through carry r
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RL_HL(EmulationState *ctx)
@@ -1285,6 +1302,7 @@ uint8_t GB_RL_HL(EmulationState *ctx)
     /*
         rotate left through carry hl
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RRC_R(EmulationState *ctx)
@@ -1293,6 +1311,7 @@ uint8_t GB_RRC_R(EmulationState *ctx)
     /*
         rotate right r
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RRC_HL(EmulationState *ctx)
@@ -1301,6 +1320,7 @@ uint8_t GB_RRC_HL(EmulationState *ctx)
     /*
          rotate right (hl)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RR_R(EmulationState *ctx)
@@ -1309,6 +1329,7 @@ uint8_t GB_RR_R(EmulationState *ctx)
     /*
         rotate right through carry R
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RR_HL(EmulationState *ctx)
@@ -1317,6 +1338,7 @@ uint8_t GB_RR_HL(EmulationState *ctx)
     /*
         rotate right through carry (hl)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_SLA_R(EmulationState *ctx)
@@ -1325,6 +1347,7 @@ uint8_t GB_SLA_R(EmulationState *ctx)
     /*
         shift left arithmetic (b0=0) r
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_SLA_HL(EmulationState *ctx)
@@ -1333,6 +1356,7 @@ uint8_t GB_SLA_HL(EmulationState *ctx)
     /*
         shift left arithmetic (b0=0) (hl)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_SWAP_R(EmulationState *ctx)
@@ -1341,6 +1365,7 @@ uint8_t GB_SWAP_R(EmulationState *ctx)
     /*
         exchange low/hi-nibble r
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_SWAP_HL(EmulationState *ctx)
@@ -1349,6 +1374,7 @@ uint8_t GB_SWAP_HL(EmulationState *ctx)
     /*
 
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_SRA_R(EmulationState *ctx)
@@ -1357,6 +1383,7 @@ uint8_t GB_SRA_R(EmulationState *ctx)
     /*
         shift right arithmetic (b7=b7) r
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_SRA_HL(EmulationState *ctx)
@@ -1365,6 +1392,7 @@ uint8_t GB_SRA_HL(EmulationState *ctx)
     /*
         shift right arithmetic (b7=b7) (hl)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 uint8_t GB_SRL_R(EmulationState *ctx)
 {
@@ -1372,6 +1400,7 @@ uint8_t GB_SRL_R(EmulationState *ctx)
     /*
         shift right logical (b7=0) r
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 uint8_t GB_SRL_HL(EmulationState *ctx)
 {
@@ -1379,6 +1408,7 @@ uint8_t GB_SRL_HL(EmulationState *ctx)
     /*
         shift right logical (b7=0) (hl)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CB_BIT_N_R(EmulationState *ctx)
@@ -1387,6 +1417,7 @@ uint8_t GB_CB_BIT_N_R(EmulationState *ctx)
     /*
         test bit n 
     */
+   return 1; // TODO: CHECK  TIMING...
 }   
 
 uint8_t GB_CB_BIT_N_HL(EmulationState *ctx)
@@ -1395,6 +1426,7 @@ uint8_t GB_CB_BIT_N_HL(EmulationState *ctx)
     /*
         test bit n  
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CB_SET_N_R(EmulationState *ctx)
@@ -1403,6 +1435,7 @@ uint8_t GB_CB_SET_N_R(EmulationState *ctx)
     /*
         set bit n
     */
+   return 1; // TODO: CHECK  TIMING...
 }   
 
 uint8_t GB_CB_SET_N_HL(EmulationState *ctx)
@@ -1411,6 +1444,7 @@ uint8_t GB_CB_SET_N_HL(EmulationState *ctx)
     /*
         reset bit n
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CB_RES_N_R(EmulationState *ctx)
@@ -1419,6 +1453,7 @@ uint8_t GB_CB_RES_N_R(EmulationState *ctx)
     /*
         reset bit n
     */
+   return 1; // TODO: CHECK  TIMING...
 }   
 
 uint8_t GB_CB_RES_N_HL(EmulationState *ctx)
@@ -1427,6 +1462,7 @@ uint8_t GB_CB_RES_N_HL(EmulationState *ctx)
     /*
         reset bit n
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 // CPU CONTROL INSTRUCTIONS
@@ -1436,13 +1472,16 @@ uint8_t GB_CCF(EmulationState *ctx)
     /*
         cy=cy xor 1 
     */
+   return 1; // TODO: CHECK  TIMING...
 }
+
 uint8_t GB_SCF(EmulationState *ctx)
 {
     // encoding: 37
     /*
         cy=1
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_NOP(EmulationState *ctx)
@@ -1460,6 +1499,7 @@ uint8_t GB_HALT(EmulationState *ctx)
     /*
         halt until interrupt occurs (low power)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_STOP(EmulationState *ctx)
@@ -1468,6 +1508,7 @@ uint8_t GB_STOP(EmulationState *ctx)
     /*
         low power standby mode (VERY low power)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_DI(EmulationState *ctx)
@@ -1476,6 +1517,7 @@ uint8_t GB_DI(EmulationState *ctx)
     /*
         disable interrupts, IME=0  
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_EI(EmulationState *ctx)
@@ -1484,6 +1526,7 @@ uint8_t GB_EI(EmulationState *ctx)
     /*
         enable interrupts, IME=1 
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 // JUMP INSTRUCTIONS
@@ -1493,6 +1536,7 @@ uint8_t GB_JP_NN(EmulationState *ctx)
     /*
         jump to nn, PC=nn
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_JP_HL(EmulationState *ctx)
@@ -1501,6 +1545,7 @@ uint8_t GB_JP_HL(EmulationState *ctx)
     /*
         jump to HL, PC=HL 
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_JP_F_NN(EmulationState *ctx)
@@ -1509,6 +1554,7 @@ uint8_t GB_JP_F_NN(EmulationState *ctx)
     /*
         conditional jump if nz,z,nc,c
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_JR_PC_PLUS_DD(EmulationState *ctx)
@@ -1517,6 +1563,7 @@ uint8_t GB_JR_PC_PLUS_DD(EmulationState *ctx)
     /*
         relative jump to nn (PC=PC+8-bit signed)
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_JR_F_PC_PLUS_DD(EmulationState *ctx)
@@ -1525,6 +1572,7 @@ uint8_t GB_JR_F_PC_PLUS_DD(EmulationState *ctx)
     /*
         conditional relative jump if nz,z,nc,c
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CALL_NN(EmulationState *ctx)
@@ -1533,6 +1581,7 @@ uint8_t GB_CALL_NN(EmulationState *ctx)
     /*
         call to nn, SP=SP-2, (SP)=PC, PC=nn
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 uint8_t GB_CALL_F_NN(EmulationState *ctx)
 {
@@ -1540,6 +1589,7 @@ uint8_t GB_CALL_F_NN(EmulationState *ctx)
     /*
         conditional call if nz,z,nc,c
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 uint8_t GB_RET(EmulationState *ctx)
 {
@@ -1547,6 +1597,7 @@ uint8_t GB_RET(EmulationState *ctx)
     /*
         return, PC=(SP), SP=SP+2  
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 uint8_t GB_RET_F(EmulationState *ctx)
 {
@@ -1554,6 +1605,7 @@ uint8_t GB_RET_F(EmulationState *ctx)
     /*
         conditional return if nz,z,nc,c
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RETI(EmulationState *ctx)
@@ -1562,6 +1614,7 @@ uint8_t GB_RETI(EmulationState *ctx)
     /*
         return and enable interrupts (IME=1)
     */
+   return 1; // TODO: CHECK  TIMING...
 }   
 
 uint8_t GB_RST_N(EmulationState *ctx)
@@ -1570,6 +1623,7 @@ uint8_t GB_RST_N(EmulationState *ctx)
     /*
         call to 00,08,10,18,20,28,30,38
     */
+   return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CB_PREFIX_INSTRUCTIONS(EmulationState *ctx)

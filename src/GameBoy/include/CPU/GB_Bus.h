@@ -7,12 +7,6 @@
 #define REG16_MODE_SP 1
 #define REG16_MODE_HL_PLUS_HL_MINUS 2
 
-// Condition types (enumarated)
-#define COND_NZ 0
-#define COND_Z  1
-#define COND_NC 2
-#define COND_C  3
-
 uint8_t GB_BusRead(EmulationState *ctx, uint16_t address);
 void GB_BusWrite(EmulationState *ctx, uint16_t address, uint8_t value);
 

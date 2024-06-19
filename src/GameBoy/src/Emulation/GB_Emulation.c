@@ -81,24 +81,24 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0xF8, GB_LD_HL_SP_PLUS_DD),
 
         // CPU CONTROL INSTRUCTIONS
-        // GB_INSTRUCTION(0xFFFF, 0x003F, GB_CCF),
-        // GB_INSTRUCTION(0xFFFF, 0x0037, GB_SCF),
-        // GB_INSTRUCTION(0xFFFF, 0x0000, GB_NOP),
-        // GB_INSTRUCTION(0xFFFF, 0x0076, GB_HALT),
-        // GB_INSTRUCTION(0xFFFF, 0x0010, GB_STOP),
-        // GB_INSTRUCTION(0xFFFF, 0x00F3, GB_DI),
-        // GB_INSTRUCTION(0xFFFF, 0x00FB, GB_EI),
+        GB_INSTRUCTION(0xFF, 0x00, GB_NOP), // THIS MF SHOULD BE AT THE START
+        GB_INSTRUCTION(0xFF, 0x3F, GB_CCF),
+        GB_INSTRUCTION(0xFF, 0x37, GB_SCF),
+        GB_INSTRUCTION(0xFF, 0x76, GB_HALT),  
+        GB_INSTRUCTION(0xFF, 0x10, GB_STOP),
+        GB_INSTRUCTION(0xFF, 0xF3, GB_DI),
+        GB_INSTRUCTION(0xFF, 0xFB, GB_EI),
 
         // JUMP INSTRUCTIONS
         // GB_INSTRUCTION(0xFFFF, 0xC3, GB_JP_NN),
         // GB_INSTRUCTION(0xFFFF, 0xE9, GB_JP_HL),
-        // GB_INSTRUCTION(0xFFFF, 0xC2, GB_JP_F_NN),
-        // GB_INSTRUCTION(0x00F8, 0x18, GB_JR_PC_PLUS_DD),
-        // GB_INSTRUCTION(0x00F8, 0x20, GB_JR_F_PC_PLUS_DD),
+        // GB_INSTRUCTION(0xFFFF, 0xC2, GB_JP_CC_NN),
+        // GB_INSTRUCTION(0x00F8, 0x18, GB_JR_E),
+        // GB_INSTRUCTION(0x00F8, 0x20, GB_JR_CC_E),
         // GB_INSTRUCTION(0xFFFF, 0xCD, GB_CALL_NN),
-        // GB_INSTRUCTION(0xFFFF, 0xC4, GB_CALL_F_NN),
+        // GB_INSTRUCTION(0xFFFF, 0xC4, GB_CALL_CC_NN),
         // GB_INSTRUCTION(0xFFFF, 0xC9, GB_RET),
-        // GB_INSTRUCTION(0xFFFF, 0xC0, GB_RET_F),
+        // GB_INSTRUCTION(0xFFFF, 0xC0, GB_RET_CC),
         // GB_INSTRUCTION(0xFFFF, 0xD9, GB_RETI),
         // GB_INSTRUCTION(0xFFFF, 0xC7, GB_RST_N)
     };
@@ -229,6 +229,11 @@ void GB_PopulateMemory(const uint8_t *buffer, size_t bytesRead)
 
 void GB_QuitProgram()
 {
+    if (s_systemContext == NULL) 
+    {
+        return;
+    }
+
     MNE_Delete(s_systemContext->registers);
     MNE_Delete(s_systemContext->memory);
     MNE_Delete(s_systemContext->header);
@@ -247,7 +252,7 @@ int GB_TickEmulation()
     // Fetch
     const uint8_t instr = s_systemContext->memory[s_systemContext->registers->PC++]; //TODO: CHANGE THIS FOR A BUS READ!!!
     
-    GameBoyInstruction* fetchedInstruction = GB_FetchInstruction(instr);
+    const GameBoyInstruction* fetchedInstruction = GB_FetchInstruction(instr);
     uint8_t clockCycles = 0;
 
     // Instruction execution
@@ -285,8 +290,43 @@ GameBoyInstruction* GB_FetchInstruction(const uint8_t opcode)
 
     return NULL;
 }
-
+// TODO: FIX USAGE WHEN EMPTY INITIALIZED(EMULATOR FIRST RUN ON THE MENU...)
 void GB_SetEmulationContext(const void *context)
 {
     s_systemContext = (EmulationState*) context;
+}
+
+EmulationInfo GB_GetInfo()
+{
+    EmulationInfo info;
+    strcpy(info.name, "MINEMU-GB");
+
+    // Real display resolution
+    info.displayWidth = GB_DISPLAY_WIDHT;
+    info.displayHeight = GB_DISPLAY_HEIGHT;
+    info.displayScaleFactor = 2;
+    // Window resolution
+    info.UIConfig.frameWidth = GB_DISPLAY_WIDHT * 2;
+    info.UIConfig.frameHeight = GB_DISPLAY_HEIGHT * 2;
+
+    return info;
+}
+
+// TODO: THIS FUNCTION ONLY DOES MINIMAL TILE RENDERING AND IS A TEST... (LCD CONTROLLER GOES HERE ALONG WITH THE PPU.. PROCESING)
+void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
+{
+    const uint8_t gameboy_tile[] = {0x3C, 0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0x5E, 0x7E, 0x0A, 0x7C, 0x56, 0x38, 0x7C};
+    const uint32_t pallete[] = {0x9BBC0FFF, 0x8BAC0FFF, 0x306230FF, 0x306230FF};
+
+    // if (s_systemContext == NULL) return;
+
+    for (int i = 0; i < GB_DISPLAY_HEIGHT; i++)
+    {
+        for (int j = 0; j < GB_DISPLAY_WIDHT; j++)
+        {
+            const uint64_t pixelIndex = i * GB_DISPLAY_WIDHT + j;
+        
+                pixels[pixelIndex] = pallete[(j + i)% 4];
+        }
+    }
 }

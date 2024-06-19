@@ -8,12 +8,14 @@
 //App implementation
 Emulation GameBoyEmulator = 
 {
+    .GetInfo = GB_GetInfo,
     .Initialize = GB_Initialize,
     .LoadProgram = GB_LoadProgram,
     .QuitProgram = GB_QuitProgram,
     .TickEmulation = GB_TickEmulation,
     .TickTimers = GB_TickTimers,
-    .SetEmulationContext = GB_SetEmulationContext
+    .SetEmulationContext = GB_SetEmulationContext,
+    .OnRender = GB_OnRender 
 };
 
 #endif 

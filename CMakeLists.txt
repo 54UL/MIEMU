@@ -33,7 +33,7 @@ else()
   message("MINEMU EXECUTABLE")
   add_executable(MINEMU "src/main.c")
   target_compile_options(MINEMU PUBLIC -std=c11 -Wall -Wextra)
-  target_link_libraries(MINEMU PUBLIC Core App Chip8)
+  target_link_libraries(MINEMU PUBLIC Core App Chip8 GameBoy)
 endif()
 
 # TODO ADD CUSTOM TARGETS

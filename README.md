@@ -2,7 +2,7 @@
 Minimalist emulator implementations (IN-PROGRESS)
 
 ## Features
-- Most minimal impementation (lightweight)
+- Most minimal impementation (simple asf)
 - Minimal dependency count
     - SDL_2
 - Emulator UI
@@ -10,13 +10,12 @@ Minimalist emulator implementations (IN-PROGRESS)
         - Emulation control (start, stop, reset)
         - File explorer 
 - Portable code
-    - Linux (ubuntu/debian)
+    - Linux (ubuntu/debian/fedora)
 - Emulation engine api
-    - runs any emulator implemented on the Emulation api
     - multi-emulator system
 - Implementations
     - Chip 8
-    - Game boy (todo)
+    - Game boy (IN PROGRESS)
 
 Check the [road map](DOCS/emu_roadmap.md) for development notes uwu
 
@@ -67,6 +66,14 @@ Chip 8 test suite
 
 Chipo 8 roms
 * https://github.com/kripod/chip8-roms
+
+## Game boy WIP ()
+- CPU Almost fully implemented
+- Test rendering without LCD Controller and PPU
+- Emulation API + app implemented
+
+![alt](images/gb-app-wip-1.png)
+
 
 ## Authors
 * TODO!!!

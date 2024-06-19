@@ -2,6 +2,7 @@
 #include <App.h>
 #include <minemu.h>
 #include <CC8_Chip8.h>
+#include <GameBoy.h>
 
 // Api elements
 EmuApp *app;
@@ -19,12 +20,13 @@ int main(int argc, char **argv)
 {
     uint8_t  running = 1 ;
     uint32_t last_update_time;
-    uint32_t last_update_time_timers;
 
     //TODO: ADD APP SELECTOR
     app = &TinySDLApp;
-    //TODO: ADD EMULATOR SELECTOR
-    emulator = &Chip8Emulator;
+
+    //TODO: ADD EMULATOR SELECTOR, IMPORTANT AS HELL....
+    // emulator = &Chip8Emulator;
+    emulator = &GameBoyEmulator;
 
     // Fetch default emulation config
     EmulationInfo emuInfo = emulator->GetInfo();

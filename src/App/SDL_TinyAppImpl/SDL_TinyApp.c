@@ -2,7 +2,12 @@
 #include "../UI/EmulatorShell.h"
 #include <SDL2/SDL.h>
 
-#define SCREEN_FACTOR 8
+/* SDL 2 APP TODOS
+
+- REMOVE STATIC MEMBERS (MAKE A WHOLE STRUCT FOR THEIR INSTANCE)
+- SCREEN FACTOR SHOULD BE ON EmulationInfo model
+
+*/
 
 // Window/presentation
 static SDL_Window *s_window;
@@ -90,12 +95,20 @@ int EventThreadFunction()
 
                 case SDL_KEYDOWN:
                     s_emulator_shell->OnInput(event.key.keysym.sym);
-                    s_eventCallback(DesktopKeyMapping(event.key.keysym.sym));
+
+                    // Temporal patch for null event callbacks (might not be implemented...)
+                    if (s_eventCallback == NULL) break;
+            
+                    s_eventCallback(DesktopKeyMapping(event.key.keysym.sym));    
                     break;
 
                 case SDL_KEYUP:
-                    s_eventCallback(-100);
                     s_emulator_shell->OnInput(-100);
+
+                    // Temporal patch for null event callbacks (might not be implemented...)
+                    if (s_eventCallback == NULL) break;
+
+                    s_eventCallback(-100);
                     break;
 
                 default:
@@ -209,8 +222,8 @@ void Init_App(EmulationInfo *info, ActionCallback actionsCallback, EmulatorShell
     // Since we are going to display a low resolution buffer
     // it is best to limit the window size so that it cannot
     // be smaller than our internal buffer size.
-    SDL_SetWindowMinimumSize(s_window, s_emulation_frame_width * SCREEN_FACTOR, s_emulation_frame_height * SCREEN_FACTOR);
-    SDL_RenderSetLogicalSize(s_renderer, s_emulation_frame_width * SCREEN_FACTOR, s_emulation_frame_height * SCREEN_FACTOR);
+    SDL_SetWindowMinimumSize(s_window, s_emulation_frame_width * info->displayScaleFactor, s_emulation_frame_height * info->displayScaleFactor);
+    SDL_RenderSetLogicalSize(s_renderer, s_emulation_frame_width * info->displayScaleFactor, s_emulation_frame_height * info->displayScaleFactor);
     SDL_RenderSetIntegerScale(s_renderer, 1);
 
     s_screen_texture = SDL_CreateTexture(s_renderer,
@@ -249,7 +262,7 @@ void Init_App(EmulationInfo *info, ActionCallback actionsCallback, EmulatorShell
     // Init emulator shell (IF AVAILABLE)
     if (s_emulator_shell != NULL)
     {
-        s_emulator_shell->Init();
+        s_emulator_shell->Init(info->UIConfig.frameWidth, info->UIConfig.frameHeight);
     }
 }
 

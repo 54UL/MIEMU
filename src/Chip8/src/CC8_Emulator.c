@@ -73,12 +73,14 @@ instructionFnPtr FetchInstruction(uint16_t opcode)
 EmulationInfo CC8_GetInfo()
 {
     EmulationInfo info;
-    strcpy(info.name,"CC8");
+    strcpy(info.name,"MINEMU-CHIP8");
+
     info.displayWidth = CHIP_8_VRAM_WIDTH;
     info.displayHeight = CHIP_8_VRAM_HEIGHT;
+    info.displayScaleFactor = 8; // Calculate this value based on dpi 
     info.UIConfig.frameWidth = 300;
     info.UIConfig.frameHeight = 128;
-
+    
     return info;
 }
 

@@ -14,10 +14,10 @@
 #define MAX_SUB_FOLDERS 4
 
 #define PATH_LENGHT 64
-#define FRAME_WIDTH  300
-#define FRAME_HEIGHT 128
 #define MAX_SHELL_ACTIONS 4
 
+// TODO: FIX THIS TRASH BELOW...
+//Ok all this things are static because this emulator shell might be running on low spec micro controllers (lol)
 static volatile uint8_t s_showMenu = 1;
 static const uint32_t s_fontColor = 0X00FF00FF;
 static const uint32_t s_backgroundColor = 0X1E1E1E1E;
@@ -26,6 +26,9 @@ static char s_full_path[PATH_LENGHT];
 static uint16_t s_readedRooms = 0;
 static int s_tabsIndex = 0;
 static int s_selectionIndex = 0;
+static uint64_t s_shell_width = 0;
+static uint64_t s_shell_height = 0;
+
 static ShellCallback s_actions[MAX_SHELL_ACTIONS];
 ShellState s_currentState;
 
@@ -85,7 +88,7 @@ void EmuShell_DrawChar(unsigned char character, uint32_t *pixels, const int x, c
     {
         for (uint8_t bit = 0; bit < 8; bit++)
         {
-            pixels[((y + bit) % FRAME_HEIGHT) * FRAME_WIDTH + ((x + gylphIndex) % FRAME_WIDTH)] = (BitMapFont[fontStartPos + gylphIndex] >> bit) & 0x01 ? s_fontColor : s_backgroundColor;
+            pixels[((y + bit) % s_shell_height) * s_shell_width + ((x + gylphIndex) % s_shell_width)] = (BitMapFont[fontStartPos + gylphIndex] >> bit) & 0x01 ? s_fontColor : s_backgroundColor;
         }
     }
 }
@@ -105,8 +108,11 @@ void DrawString()
 
 }
 
-void EmuShell_Init()
+void EmuShell_Init(uint64_t width, uint64_t height)
 {
+    s_shell_width = width;
+    s_shell_height = height;
+
     // TODO: GET THIS VALUE FROM A CONFIG FILE AND MOVE THE STRCAT???
     strcat(s_full_path,CC8_ROMS_PATH);
     GetFolderContents(CC8_ROMS_PATH);
@@ -127,7 +133,7 @@ void EmuShell_UpdateFrame(uint32_t *pixels)
    char currentStatusStr[32];
 
    // Clear rendering buffer
-   memset(pixels, s_backgroundColor, FRAME_WIDTH * FRAME_HEIGHT * sizeof(uint32_t));
+   memset(pixels, s_backgroundColor, s_shell_width * s_shell_height * sizeof(uint32_t));
 
    EmuShell_DrawString("[MINEMU 0.1b BY XUL]", pixels, 32, ShellRow(&rowYLoc));
 

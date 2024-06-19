@@ -237,7 +237,6 @@ uint8_t GB_LD_RR_NN(EmulationState *ctx)
         nn = unsigned_16(lsb=read(PC++), msb=read(PC++))
         rr = nn
     */
-    // TODO: SET ENC REG DOES NOT WORK FOR THIS INSTRUCTION DUE TO RR == 3 IS SP AND NOT AF
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4;
     const uint8_t lsb = GB_BusRead(ctx, ctx->registers->PC++);
     const uint8_t msb = GB_BusRead(ctx, ctx->registers->PC++);
@@ -949,6 +948,7 @@ uint8_t GB_CP_HL(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_INC_R(EmulationState *ctx)
@@ -973,6 +973,7 @@ uint8_t GB_INC_R(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_INC_HL(EmulationState *ctx)
@@ -999,6 +1000,7 @@ uint8_t GB_INC_HL(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_DEC_R(EmulationState *ctx)
@@ -1023,6 +1025,8 @@ uint8_t GB_DEC_R(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
+
 }
 
 uint8_t GB_DEC_HL(EmulationState *ctx)
@@ -1049,6 +1053,7 @@ uint8_t GB_DEC_HL(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_DAA(EmulationState *ctx)
@@ -1057,7 +1062,7 @@ uint8_t GB_DAA(EmulationState *ctx)
     /*
       just flags???
     */
-    
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CPL(EmulationState *ctx)
@@ -1077,6 +1082,7 @@ uint8_t GB_CPL(EmulationState *ctx)
     
     //Used to set F reg 
     GB_F_OR_AF(ctx, tmpRegF);
+    return 1; // TODO: CHECK  TIMING...
 }
 
 // 16 BIT ALU INSTRUCTIONS
@@ -1124,6 +1130,7 @@ uint8_t GB_INC_RR(EmulationState *ctx)
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0X30) >> 4; // Extract rr from instruction
     const uint16_t rrInc = GB_GetReg16(ctx, rr, REG16_MODE_SP) + 1;
     GB_SetReg16(ctx, rr, rrInc, REG16_MODE_SP);
+
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1136,6 +1143,7 @@ uint8_t GB_DEC_RR(EmulationState *ctx)
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4; // Extract rr from instruction
     const uint16_t rrDec = GB_GetReg16(ctx, rr, REG16_MODE_SP) - 1;
     GB_SetReg16(ctx, rr, rrDec, REG16_MODE_SP);
+
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1560,65 +1568,114 @@ uint8_t GB_EI(EmulationState *ctx)
 // JUMP INSTRUCTIONS
 uint8_t GB_JP_NN(EmulationState *ctx)
 {
-    // encoding: C3 nn nn
     /*
-        jump to nn, PC=nn
+    Opcode 0b11000011/0xC3 Duration 4 machine cycles
+    Length 3 bytes: opcode + LSB(nn) + MSB(nn)
+
+    nn_lsb = read_memory(addr=PC); PC = PC + 1
+    nn_msb = read_memory(addr=PC); PC = PC + 1
+    nn = unsigned_16(lsb=nn_lsb, msb=nn_msb)
+    PC = nn
     */
-   return 1; // TODO: CHECK  TIMING...
+   return 4;
 }
 
 uint8_t GB_JP_HL(EmulationState *ctx)
 {
-    // encoding: E9
     /*
-        jump to HL, PC=HL 
+    Opcode 0b11101001/0xE9 Duration 1 machine cycle
+    Length 1 byte: opcode
+    
+        PC = HL
     */
-   return 1; // TODO: CHECK  TIMING...
+   return 1;
 }
 
-uint8_t GB_JP_F_NN(EmulationState *ctx)
+uint8_t GB_JP_CC_NN(EmulationState *ctx)
 {
-    // encoding: xx nn nn
     /*
-        conditional jump if nz,z,nc,c
+    Opcode 0b110xx010/various
+    Duration 4 machine cycles (cc=true)
+    3 machine cycles (cc=false)
+    Length 3 bytes: opcode + LSB(nn) + MSB(nn)
+    conditional jump if nz,z,nc,c
+
+    nn_lsb = read_memory(addr=PC); PC = PC + 1
+    nn_msb = read_memory(addr=PC); PC = PC + 1
+    nn = unsigned_16(lsb=nn_lsb, msb=nn_msb)
+    if !flags.Z: # cc=true
+    PC = nn
     */
-   return 1; // TODO: CHECK  TIMING...
+    return 1; // TODO: CHECK  TIMING...
 }
 
-uint8_t GB_JR_PC_PLUS_DD(EmulationState *ctx)
+uint8_t GB_JR_E(EmulationState *ctx)
 {
-    // encoding: 18 dd
     /*
-        relative jump to nn (PC=PC+8-bit signed)
+    Opcode 0b00011000/0x18 Duration 3 machine cycles
+    Length 2 bytes: opcode + e
+
+    e = signed_8(read_memory(addr=PC)); PC = PC + 1
+    PC = PC + e
     */
-   return 1; // TODO: CHECK  TIMING...
+   
+   return 3; 
 }
 
-uint8_t GB_JR_F_PC_PLUS_DD(EmulationState *ctx)
+uint8_t GB_JR_CC_E(EmulationState *ctx)
 {
-    // encoding: xx dd
     /*
-        conditional relative jump if nz,z,nc,c
+    Opcode 0b001xx000/various Duration 
+    3 machine cycles (cc=true)
+    2 machine cycles (cc=false)
+    Length 2 bytes: opcode + e
+
+
     */
    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CALL_NN(EmulationState *ctx)
 {
-    // encoding: CD nn nn 
     /*
-        call to nn, SP=SP-2, (SP)=PC, PC=nn
+    Opcode 0b11001101/0xCD
+    Duration 6 machine cycles
+    Length 3 bytes: opcode + LSB(nn) + MSB(nn) Flags -
+
+        nn_lsb = read_memory(addr=PC); PC = PC + 1
+        nn_msb = read_memory(addr=PC); PC = PC + 1
+        nn = unsigned_16(lsb=nn_lsb, msb=nn_msb)
+        SP = SP - 1
+        write_memory(addr=SP, data=msb(PC)); SP = SP - 1
+        write_memory(addr=SP, data=lsb(PC))
+        PC = nn
     */
-   return 1; // TODO: CHECK  TIMING...
+
+    return 1; // TODO: CHECK  TIMING...
 }
-uint8_t GB_CALL_F_NN(EmulationState *ctx)
+
+uint8_t GB_CALL_CC_NN(EmulationState *ctx)
 {
-    // encoding: xx nn nn
     /*
-        conditional call if nz,z,nc,c
+    Opcode 0b110xx100/various 
+    Duration 6 machine cycles (cc=true)
+    3 machine cycles (cc=false)
+    Length 3 bytes: opcode + LSB(nn) + MSB(nn) Flags -
+    
+    nn_lsb = read_memory(addr=PC); PC = PC + 1
+    nn_msb = read_memory(addr=PC); PC = PC + 1
+    nn = unsigned_16(lsb=nn_lsb, msb=nn_msb)
+    
+    if !flags.Z: # cc=true
+        SP = SP - 1
+        write_memory(addr=SP, data=msb(PC)); SP = SP - 1
+        write_memory(addr=SP, data=lsb(PC))
+        PC = nn
+
     */
    return 1; // TODO: CHECK  TIMING...
 }
+
 uint8_t GB_RET(EmulationState *ctx)
 {
     // encoding: C9
@@ -1627,34 +1684,76 @@ uint8_t GB_RET(EmulationState *ctx)
     */
    return 1; // TODO: CHECK  TIMING...
 }
-uint8_t GB_RET_F(EmulationState *ctx)
+uint8_t GB_RET_CC(EmulationState *ctx)
 {
-    // encoding: xx
     /*
-        conditional return if nz,z,nc,c
+        Opcode 0b11001001/0xC9 
+        Duration 4 machine cycles
+        Length 1 byte: opcode 
+
+        lsb = read_memory(addr=SP); SP = SP + 1
+        msb = read_memory(addr=SP); SP = SP + 1
+        PC = unsigned_16(lsb=lsb, msb=msb)
     */
    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RETI(EmulationState *ctx)
 {
-    // encoding: D9
     /*
-        return and enable interrupts (IME=1)
+        Opcode 0b11011001/0xD9 
+        Duration 4 machine cycles
+        Length 1 byte: opcode
+
+        lsb = read_memory(addr=SP); SP = SP + 1
+        msb = read_memory(addr=SP); SP = SP + 1
+        PC = unsigned_16(lsb=lsb, msb=msb)
+        IME = 1
     */
+
+   
    return 1; // TODO: CHECK  TIMING...
 }   
 
 uint8_t GB_RST_N(EmulationState *ctx)
 {
-    // encoding: xx
     /*
-        call to 00,08,10,18,20,28,30,38
+       [call to 00,08,10,18,20,28,30,38 interrupt vectors]
+        Opcode 0b11xxx111/various 
+        Duration 4 machine cycles
+        Length 1 byte: opcode
+
+        if opcode == 0xDF: # example: RST 0x18
+            n = 0x18
+            SP = SP - 1
+            write_memory(addr=SP, data=msb(PC)); SP = SP - 1
+            write_memory(addr=SP, data=lsb(PC))
+            PC = unsigned_16(lsb=n, msb=0x00)
     */
+
    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CB_PREFIX_INSTRUCTIONS(EmulationState *ctx)
 {
     //INSERT HERE THE DECODING PROCESSES OF CB PREFIX INSTRUCTIONS...
+}
+
+uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc)
+{
+    switch (cc)
+    {
+    case COND_NZ:
+        return !GB_TEST_F(ctx, GB_ZERO_FLAG);
+    case COND_Z:
+        return GB_TEST_F(ctx, GB_ZERO_FLAG);
+    case COND_NC:
+        return !GB_TEST_F(ctx, GB_C_FLAG);
+    case COND_C:
+        return GB_TEST_F(ctx, GB_C_FLAG);
+
+    default:
+        MNE_Log("Cannot resolve CC condition(unknow value)");
+    }
+    return 0;
 }

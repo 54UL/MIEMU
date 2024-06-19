@@ -4,6 +4,12 @@
 
 #define GB_INSTRUCTION_SET_LENGHT 0xFF
 
+// Condition types (enumarated)
+#define COND_NZ 0
+#define COND_Z  1
+#define COND_NC 2
+#define COND_C  3
+
 // 8-BIT LOAD INSTRUCTIONS
 uint8_t GB_LD_R_R(EmulationState *ctx);
 uint8_t GB_LD_R_N(EmulationState *ctx);
@@ -105,15 +111,19 @@ uint8_t GB_EI(EmulationState *ctx);
 // JUMP INSTRUCTIONS
 uint8_t GB_JP_NN(EmulationState *ctx);
 uint8_t GB_JP_HL(EmulationState *ctx);
-uint8_t GB_JP_F_NN(EmulationState *ctx);
-uint8_t GB_JR_PC_PLUS_DD(EmulationState *ctx);
-uint8_t GB_JR_F_PC_PLUS_DD(EmulationState *ctx);
+uint8_t GB_JP_CC_NN(EmulationState *ctx);
+uint8_t GB_JR_E(EmulationState *ctx);
+uint8_t GB_JR_CC_E(EmulationState *ctx);
+
 uint8_t GB_CALL_NN(EmulationState *ctx);
-uint8_t GB_CALL_F_NN(EmulationState *ctx);
+uint8_t GB_CALL_CC_NN(EmulationState *ctx);
+
 uint8_t GB_RET(EmulationState *ctx);
-uint8_t GB_RET_F(EmulationState *ctx);
+uint8_t GB_RET_CC(EmulationState *ctx);
 uint8_t GB_RETI(EmulationState *ctx);
+
 uint8_t GB_RST_N(EmulationState *ctx);
+
 
 // SINGLE BIT OPERATIONS (CB PREFIX)
 uint8_t GB_CB_BIT_N_R(EmulationState *ctx);   
@@ -124,5 +134,9 @@ uint8_t GB_CB_RES_N_R(EmulationState *ctx);
 uint8_t GB_CB_RES_N_HL(EmulationState *ctx);
 
 uint8_t GB_CB_PREFIX_INSTRUCTIONS(EmulationState *ctx);
+
+// AXULIAR DECODING FUNCTIONS
+
+uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc);
 
 #endif

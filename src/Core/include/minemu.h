@@ -31,7 +31,9 @@ typedef struct {
 
 typedef struct {
     char     name[32];
-    uint32_t displayWidth, displayHeight;
+    uint32_t displayWidth;
+    uint32_t displayHeight;
+    uint32_t displayScaleFactor;
     ShellConfig  UIConfig;
 } EmulationInfo;
 
@@ -51,7 +53,7 @@ typedef struct
 
 typedef struct
 {
-    void       (*Init)(void);
+    void       (*Init)(uint64_t width, uint64_t height);
     void       (*UpdateFrame)(uint32_t *pixels);
     void       (*OnInput)(const char code);
     uint8_t    (*Shown)(void);

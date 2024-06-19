@@ -51,6 +51,12 @@ cmake --build .
         ```
 3) Enjoy
 
+## Game boy (W.I.P)
+- CPU Almost fully implemented
+- Test rendering without LCD Controller and PPU
+
+![alt](images/gb-app-wip-1.png)
+
 ## CC8 (C CHIP-8 EMULATOR) Overview 
 
 # Initial state
@@ -66,14 +72,6 @@ Chip 8 test suite
 
 Chipo 8 roms
 * https://github.com/kripod/chip8-roms
-
-## Game boy WIP ()
-- CPU Almost fully implemented
-- Test rendering without LCD Controller and PPU
-- Emulation API + app implemented
-
-![alt](images/gb-app-wip-1.png)
-
 
 ## Authors
 * TODO!!!

@@ -109,7 +109,7 @@ void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *
 
     // Run the program copyAToB
     RunProgram(emulator, emulationCtx, copyAToB, sizeof(copyAToB));
-    EXPECT_TRUE((emulationCtx->registers->A) == (emulationCtx->registers->FILE_16[GB_BC_OFFSET] >> 8)) << ExpectMessage(copyAToB, "B = A");
+    EXPECT_TRUE((emulationCtx->registers->A) == (emulationCtx->registers->BC >> 8)) << ExpectMessage(copyAToB, "B = A");
 
     // Run the program loadAFromHL
     emulationCtx->memory[0XF000]  = testValue;

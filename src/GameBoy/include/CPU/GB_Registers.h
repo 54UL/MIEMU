@@ -3,13 +3,6 @@
 
 #include <stdint.h>
 
-// 16 bit registers instruction encoding offests
-#define GB_BC_OFFSET 0
-#define GB_DE_OFFSET 1
-#define GB_HL_OFFSET 2
-#define GB_AF_OFFSET 3
-#define GB_SP_OFFSET 3
-
 //REGISTERS OFFSETS
 // LSB MSB ARE FLIPPED THAT'S WHY B = 1 AND C = 0 AND 
 #define GB_B_OFFSET           1
@@ -35,6 +28,14 @@
 #define GB_TMP_F() uint8_t tmpRegF = 0x00
 #define GB_SET_F(FLAG, VALUE) tmpRegF |= ((VALUE) << FLAG)
 #define GB_TEST_F(CTX, FLAG) ((CTX->registers->F >> FLAG) & 0X01)
+
+// typedef struct {
+//     union 
+//     {
+       
+//     };
+    
+// } StatusRegister;
 
 typedef struct 
 {

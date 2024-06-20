@@ -313,24 +313,18 @@ EmulationInfo GB_GetInfo()
 }
 
 // const uint32_t pallete[] = {0x9BBC0FFF , 0x8BAC0FFF, 0x306230FF, 0x0F380FFF}; // green shades
-const uint32_t pallete[] = {0xFFFFFFFF , 0XE0E0E0FF, 0XA0A0A0FF, 0x000000FF}; // b/w
+const uint32_t pallete[] = {0xFFFFFFFF , 0XE0E0E0FF, 0XA0A0A0FF, 0x000000FF}; // gray shades
 
 // Renders n 8x8 pixel tiles
 void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t n, const uint16_t x, const uint16_t y)
 {
-    for (uint8_t tileIndex = 0;  tileIndex  < 16; tileIndex++)
+    for (uint8_t tileIndex = 0;  tileIndex  < 16; tileIndex += 2)
     {
-        // MNE_Log("\nto decode: %02X,%02X\n", tile[tileIndex], tile[tileIndex+1]);
-        // MNE_Log("\nsprite indexes:\n");
-
         for (uint8_t tileBitPos = 0;  tileBitPos < 8; tileBitPos++)
         {
-            // image is flipped... 
             uint8_t colorIndex =  ( tile[tileIndex]  >> tileBitPos & 0x01) | (((tile[tileIndex + 1] >> tileBitPos ) & 0x01)  << 1);
-            // uint8_t colorIndex = tile[tileIndex + 1] >> tileBitPos
 
-            // MNE_Log("%i ", colorIndex);
-            const uint64_t pixelIndex = (x + tileBitPos) + ((GB_DISPLAY_WIDHT * tileIndex ));
+            const uint64_t pixelIndex = (x - tileBitPos) + ((GB_DISPLAY_WIDHT) * (tileIndex / 2));
             pixels[pixelIndex] = pallete[colorIndex];
         }
     }
@@ -365,5 +359,5 @@ void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
     }
     // Render sample tiles
     GB_RenderTile(pixels, gameboy_tile, 1, 50, 50);
-    GB_RenderTile(pixels, somePokemonTile, 1, 100, 50);
+    GB_RenderTile(pixels, somePokemonTile, 1, 100, 100);
 }

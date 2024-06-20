@@ -1,11 +1,7 @@
 #ifndef GB_PALLETE_H
 #define GB_PALLETE_H
 
-//White, light gray, darkGray, Black
-// TESTING PALLETE AND EXPERIMENTAL HEADER...
-#define GB_DEFAULT_PALLETE_0 0xFFFFFF
-#define GB_DEFAULT_PALLETE_1 0xAAAAAA
-#define GB_DEFAULT_PALLETE_2 0x555555
-#define GB_DEFAULT_PALLETE_3 0x000000
+// FOR THE MOMENT TESTING PALLETE
+// const uint32_t pallete[] = {0x9BBC0FFF , 0x8BAC0FFF, 0x306230FF, 0x0F380FFF}; // green shades
 
 #endif

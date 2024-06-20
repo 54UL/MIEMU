@@ -38,7 +38,6 @@
 
 typedef struct 
 {
-    // BIG MF TODO: FIX THIS FUCKING UNION AND AVOID USING FILE_16[] AS MAIN REGISTER ACCESS
      union {
         struct {
             uint8_t B;

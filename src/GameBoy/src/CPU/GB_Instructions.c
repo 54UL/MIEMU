@@ -1642,13 +1642,13 @@ uint8_t GB_CALL_NN(EmulationState *ctx)
     Duration 6 machine cycles
     Length 3 bytes: opcode + LSB(nn) + MSB(nn) Flags -
 
-        nn_lsb = read_memory(addr=PC); PC = PC + 1
-        nn_msb = read_memory(addr=PC); PC = PC + 1
-        nn = unsigned_16(lsb=nn_lsb, msb=nn_msb)
-        SP = SP - 1
-        write_memory(addr=SP, data=msb(PC)); SP = SP - 1
-        write_memory(addr=SP, data=lsb(PC))
-        PC = nn
+    nn_lsb = read_memory(addr=PC); PC = PC + 1
+    nn_msb = read_memory(addr=PC); PC = PC + 1
+    nn = unsigned_16(lsb=nn_lsb, msb=nn_msb)
+    SP = SP - 1
+    write_memory(addr=SP, data=msb(PC)); SP = SP - 1
+    write_memory(addr=SP, data=lsb(PC))
+    PC = nn
     */
 
     return 1; // TODO: CHECK  TIMING...
@@ -1684,24 +1684,25 @@ uint8_t GB_RET(EmulationState *ctx)
     */
    return 1; // TODO: CHECK  TIMING...
 }
+
 uint8_t GB_RET_CC(EmulationState *ctx)
 {
     /*
-        Opcode 0b11001001/0xC9 
-        Duration 4 machine cycles
-        Length 1 byte: opcode 
+    Opcode 0b11001001/0xC9
+    Duration 4 machine cycles
+    Length 1 byte: opcode
 
-        lsb = read_memory(addr=SP); SP = SP + 1
-        msb = read_memory(addr=SP); SP = SP + 1
-        PC = unsigned_16(lsb=lsb, msb=msb)
+    lsb = read_memory(addr=SP); SP = SP + 1
+    msb = read_memory(addr=SP); SP = SP + 1
+    PC = unsigned_16(lsb=lsb, msb=msb)
     */
-   return 1; // TODO: CHECK  TIMING...
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_RETI(EmulationState *ctx)
 {
     /*
-        Opcode 0b11011001/0xD9 
+        Opcode 0b11011001/0xD9
         Duration 4 machine cycles
         Length 1 byte: opcode
 
@@ -1711,15 +1712,14 @@ uint8_t GB_RETI(EmulationState *ctx)
         IME = 1
     */
 
-   
-   return 1; // TODO: CHECK  TIMING...
-}   
+    return 1; // TODO: CHECK  TIMING...
+}
 
 uint8_t GB_RST_N(EmulationState *ctx)
 {
     /*
        [call to 00,08,10,18,20,28,30,38 interrupt vectors]
-        Opcode 0b11xxx111/various 
+        Opcode 0b11xxx111/various
         Duration 4 machine cycles
         Length 1 byte: opcode
 
@@ -1731,12 +1731,12 @@ uint8_t GB_RST_N(EmulationState *ctx)
             PC = unsigned_16(lsb=n, msb=0x00)
     */
 
-   return 1; // TODO: CHECK  TIMING...
+    return 1; // TODO: CHECK  TIMING...
 }
 
 uint8_t GB_CB_PREFIX_INSTRUCTIONS(EmulationState *ctx)
 {
-    //INSERT HERE THE DECODING PROCESSES OF CB PREFIX INSTRUCTIONS...
+    // INSERT HERE THE DECODING PROCESSES OF CB PREFIX INSTRUCTIONS...
 }
 
 uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc)

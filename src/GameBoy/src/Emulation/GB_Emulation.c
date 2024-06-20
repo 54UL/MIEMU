@@ -315,12 +315,7 @@ void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t n, cons
         {
             uint8_t colorIndex =  ( tile[tileIndex]  >> tileBitPos & 0x01) | (((tile[tileIndex + 1] >> tileBitPos ) & 0x01)  << 1);
 
-<<<<<<< HEAD
             const uint64_t pixelIndex = (x - tileBitPos) + ((GB_DISPLAY_WIDHT) * (tileIndex / 2));
-=======
-            // MNE_Log("%i ", colorIndex);
-            const uint64_t pixelIndex = (x + tileBitPos) + (GB_DISPLAY_WIDHT * tileIndex );
->>>>>>> 793c7e283c4c469980d15c1abda7cf6d8eac9736
             pixels[pixelIndex] = pallete[colorIndex];
         }
     }

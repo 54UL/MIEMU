@@ -12,20 +12,11 @@ static uint32_t s_instructionLenght = 0;
 
 static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
     {
-        // TODO: INSTRUCTIONS WITH R PREFIX HAVE MISSING CASES..
         // 8-BIT LOAD INSTRUCTIONS
         //-------------MASK----OPCODE--HANDLER
         GB_INSTRUCTION(0xFF, 0x0000, GB_NOP),
 
         // LD_R_R
-        // GB_INSTRUCTION(0xFF, 0x0046, GB_LD_R_R),
-        // GB_INSTRUCTION(0xFF, 0x004E, GB_LD_R_R),
-        // GB_INSTRUCTION(0xFF, 0x0056, GB_LD_R_R),
-        // GB_INSTRUCTION(0xFF, 0x005E, GB_LD_R_R),
-        // GB_INSTRUCTION(0xFF, 0x0066, GB_LD_R_R),
-        // GB_INSTRUCTION(0xFF, 0x006E, GB_LD_R_R),
-        // GB_INSTRUCTION(0xFF, 0x0076, GB_LD_R_R),
-        // GB_INSTRUCTION(0xFF, 0x0078, GB_LD_R_R),
         GB_INSTRUCTION(0XC0, 0x40, GB_LD_R_R),
 
         // LD_R_N
@@ -330,7 +321,7 @@ void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t n, cons
             // uint8_t colorIndex = tile[tileIndex + 1] >> tileBitPos
 
             // MNE_Log("%i ", colorIndex);
-            const uint64_t pixelIndex = (x + tileBitPos) + ((GB_DISPLAY_WIDHT * tileIndex ));
+            const uint64_t pixelIndex = (x + tileBitPos) + (GB_DISPLAY_WIDHT * tileIndex );
             pixels[pixelIndex] = pallete[colorIndex];
         }
     }
@@ -363,6 +354,7 @@ void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
                 
         pixels[pixelIndex] = pallete[j];
     }
+
     // Render sample tiles
     GB_RenderTile(pixels, gameboy_tile, 1, 50, 50);
     GB_RenderTile(pixels, somePokemonTile, 1, 100, 50);

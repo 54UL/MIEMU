@@ -311,6 +311,8 @@ void CPU_BIOS_Test(const Emulation *emulator, const EmulationState *emulationCtx
     EXPECT_TRUE(size == 256); // 256 BYTES....
     EXPECT_TRUE(biosFile.read(reinterpret_cast<char *>(buffer.data()), size));
     MNE_HexDump(buffer.data(), buffer.size());
+
+    RunProgram(emulator, emulationCtx, buffer.data(), buffer.size() - 1);
 }
 
 // TEST_F(GameBoyFixture, Load_And_Store_8bit)

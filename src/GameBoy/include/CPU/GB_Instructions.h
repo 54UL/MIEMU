@@ -19,8 +19,8 @@ uint8_t GB_LD_HL_N(EmulationState *ctx);
 uint8_t GB_LD_A_BC(EmulationState *ctx);
 uint8_t GB_LD_A_DE(EmulationState *ctx);
 uint8_t GB_LD_A_NN(EmulationState *ctx);
-uint8_t GB_LD_BC_A(EmulationState *ctx);
-uint8_t GB_LD_DE_A(EmulationState *ctx);
+uint8_t GB_LD_BC_A(EmulationState *ctx);// NOT USED??
+uint8_t GB_LD_DE_A(EmulationState *ctx);// NOT USED??
 uint8_t GB_LD_NN_A(EmulationState *ctx);
 uint8_t GB_LDH_A_N(EmulationState *ctx);
 uint8_t GB_LDH_N_A(EmulationState *ctx);
@@ -136,7 +136,6 @@ uint8_t GB_CB_RES_N_HL(EmulationState *ctx);
 uint8_t GB_CB_PREFIX_INSTRUCTIONS(EmulationState *ctx);
 
 // AXULIAR DECODING FUNCTIONS
-
 uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc);
 
 #endif

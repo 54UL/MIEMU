@@ -119,9 +119,6 @@ uint8_t GB_LD_BC_A(EmulationState *ctx)
     /*
         write(BC, A)
     */
-
-    //TODO: FIX ctx->registers->A for getting the A reg instead of (HL) due to register instruction index encoding
-    //TODO: Also this applies for GB_SetReg8
     GB_BusWrite(ctx, ctx->registers->BC, ctx->registers->A);
 }
 

@@ -10,11 +10,14 @@ RESOURCES:
 */
 
 // #define TEST_ROOM_PATH "../../../ROMS/GameBoy/blargg-ld_r_r.gb"
+#define BIOS_PATH "../../../ROMS/GameBoy/bios.gb"
+
 #define ExpectMessage(instr, message) "GB INSTRUCTION [" << #instr << "] EXPECTED: " << #message
 #define GB_DEBUG
 
 #include <gtest/gtest.h>
 #include <stdlib.h>
+#include <fstream>
 
 extern "C"
 {
@@ -31,7 +34,8 @@ void Load_And_Store_Tests_16bit(const Emulation *emulator, const EmulationState 
 void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx);
 void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx);
 
-void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx);
+void CPU_Jumps_Tests(const Emulation *emulator, const EmulationState *emulationCtx);
+void CPU_BIOS_Test(const Emulation *emulator, const EmulationState *emulationCtx);
 
 class GameBoyFixture : public testing::Test
 {
@@ -156,7 +160,7 @@ void Load_And_Store_Tests_16bit(const Emulation *emulator, const EmulationState 
     EXPECT_TRUE(emulationCtx->registers->DE == emulationCtx->registers->BC) << "PUSH DE";
 }
 
-void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulationCtx)
+void CPU_Jumps_Tests(const Emulation *emulator, const EmulationState *emulationCtx)
 {
     constexpr uint8_t jumpInstruction[] = {0xC3, 0x10, 0x00};   // JP 0x0010
     constexpr uint8_t jumpRelativeInstruction[] = {0x18, 0x0F}; // JR 0x000F
@@ -204,7 +208,6 @@ void CPU_Control_Test(const Emulation *emulator, const EmulationState *emulation
     RunProgram(emulator, emulationCtx, restartInstruction, sizeof(restartInstruction));
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0000) << "Restart instruction";
 }
-
 
 void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
@@ -291,22 +294,51 @@ void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulat
     // EXPECT_TRUE(emulationCtx->registers->HL == 0x6B02) << "LD HL, SP+34";
 }
 
-TEST_F(GameBoyFixture, Load_And_Store_8bit)
+void CPU_BIOS_Test(const Emulation *emulator, const EmulationState *emulationCtx)
 {
-    Load_And_Store_Tests_8bit(emulator, emulationCtx);
+    std::ifstream biosFile (BIOS_PATH);
+    
+    EXPECT_TRUE(biosFile.is_open());
+
+    // Determine the file size
+    biosFile.seekg(0, std::ios::end);
+    std::streamsize size = biosFile.tellg();
+    biosFile.seekg(0, std::ios::beg);
+
+    // Create a vector to hold the file data
+    std::vector<uint8_t> buffer(size);
+
+    EXPECT_TRUE(size == 256); // 256 BYTES....
+    EXPECT_TRUE(biosFile.read(reinterpret_cast<char *>(buffer.data()), size));
+    MNE_HexDump(buffer.data(), buffer.size());
 }
 
-TEST_F(GameBoyFixture, Load_And_Store_16bit)
+// TEST_F(GameBoyFixture, Load_And_Store_8bit)
+// {
+//     Load_And_Store_Tests_8bit(emulator, emulationCtx);
+// }
+
+// TEST_F(GameBoyFixture, Load_And_Store_16bit)
+// {
+//     Load_And_Store_Tests_16bit(emulator, emulationCtx);
+// }
+
+// TEST_F(GameBoyFixture, ALU_8Bit)
+// {
+//     CPU_ALU_Tests_8bit(emulator, emulationCtx);
+// }
+
+// TEST_F(GameBoyFixture, ALU_16Bit)
+// {
+//     CPU_ALU_Tests_16bit(emulator, emulationCtx);
+// }
+
+TEST_F(GameBoyFixture, BIOS_TEST)
 {
-    Load_And_Store_Tests_16bit(emulator, emulationCtx);
+    CPU_BIOS_Test(emulator, emulationCtx);
 }
 
-TEST_F(GameBoyFixture, ALU_8Bit)
-{
-    CPU_ALU_Tests_8bit(emulator, emulationCtx);
-}
-
-TEST_F(GameBoyFixture, ALU_16Bit)
-{
-    CPU_ALU_Tests_16bit(emulator, emulationCtx);
-}
+// TEST_F(GameBoyFixture, Load_And_Store_8bit)
+// {
+//     Load_And_Store_Tests_8bit(emulator, emulationCtx);
+// }

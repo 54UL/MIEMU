@@ -33,4 +33,4 @@
 build/
 .vscode/*.json
 .vscode/settings.json
-ROMS/GameBoy/bios.gb
+roms/gameboy/bios.gb

@@ -239,13 +239,13 @@ void Init_App(EmulationInfo *info, ActionCallback actionsCallback, EmulatorShell
 
     // Randomize the buffer (ready state) (Emulation RENDERING TEST)
     int i = 0,j = 0;
-    for (i = 0; i < s_emulation_frame_height; i++) 
-    {
-        for (j = 0; j < s_emulation_frame_width; j++)
-        {
-             s_emulation_pixels[i+j*s_emulation_frame_height] = rand() % 0xFFFFFF7F;
-        }
-    }
+    // for (i = 0; i < s_emulation_frame_height; i++) 
+    // {
+    //     for (j = 0; j < s_emulation_frame_width; j++)
+    //     {
+    //          s_emulation_pixels[i+j*s_emulation_frame_height] = rand() % 0xFFFFFF7F;
+    //     }
+    // }
 
     // Emulator buffer test.
     for (i = 0; i < s_emulator_ui_frame_height; i++) 

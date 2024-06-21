@@ -303,8 +303,8 @@ EmulationInfo GB_GetInfo()
     return info;
 }
 
-// const uint32_t pallete[] = {0x9BBC0FFF , 0x8BAC0FFF, 0x306230FF, 0x0F380FFF}; // green shades
-const uint32_t pallete[] = {0xFFFFFFFF , 0XE0E0E0FF, 0XA0A0A0FF, 0x000000FF}; // gray shades
+const uint32_t pallete[] = {0x9BBC0FFF , 0x8BAC0FFF, 0x306230FF, 0x0F380FFF}; // green shades
+// const uint32_t pallete[] = {0xFFFFFFFF , 0XE0E0E0FF, 0XA0A0A0FF, 0x000000FF}; // gray shades
  
 // Renders n 8x8 pixel tiles
 void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t x, const uint16_t y)
@@ -321,12 +321,12 @@ void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t x, cons
     }
 }
 
-static int x = 0,y = 0;
 // TODO: THIS FUNCTION ONLY DOES MINIMAL TILE RENDERING AND IS A TEST... (LCD CONTROLLER GOES HERE ALONG WITH THE PPU.. PROCESING)
 void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
 {
+    // provided by pan-docs game boy documentation :3
     const uint8_t gameboy_tile[] = {0x3C, 0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0x5E, 0x7E, 0x0A, 0x7C, 0x56, 0x38, 0x7C};
-    // const uint8_t somePokemonTile[] = {0xFF,0x00,0x7E,0xFF,0x85,0x81,0x89,0x83,0x93,0x85,0xA5,0x8B,0xC9,0x97,0x7E,0xFF};
+    
     // if (s_systemContext == NULL) return;
 
     // TODO: Make this pattern default startup screen on the sdl app screen initialiazation
@@ -348,14 +348,5 @@ void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
         pixels[pixelIndex] = pallete[j];
     }
 
-    
-    // 10 x 9 tiles
-    // Render sample tiles
-    for (uint8_t y = 0; y < 9; y++)
-    {
-        for (uint8_t x = 0; x < 10; x++)
-        {
-            GB_RenderTile(pixels, gameboy_tile, (y* 16) , (x * 16) );
-        }
-    }
+    GB_RenderTile(pixels, gameboy_tile, GB_DISPLAY_WIDHT / 2 , GB_DISPLAY_HEIGHT / 2);
 }

@@ -5,7 +5,7 @@
 #include <minemu.h>
 
 #define DEFAUL_COL_Y_SPACING 8
-#define CC8_ROMS_PATH "../ROMS/"
+#define CC8_ROMS_PATH "../roms/"
 
 void       EmuShell_Init();
 void       EmuShell_UpdateFrame(uint32_t * pixels);

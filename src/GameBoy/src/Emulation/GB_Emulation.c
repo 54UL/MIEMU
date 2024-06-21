@@ -305,7 +305,7 @@ EmulationInfo GB_GetInfo()
 
 // const uint32_t pallete[] = {0x9BBC0FFF , 0x8BAC0FFF, 0x306230FF, 0x0F380FFF}; // green shades
 const uint32_t pallete[] = {0xFFFFFFFF , 0XE0E0E0FF, 0XA0A0A0FF, 0x000000FF}; // gray shades
-
+ 
 // Renders n 8x8 pixel tiles
 void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t n, const uint16_t x, const uint16_t y)
 {
@@ -313,16 +313,15 @@ void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t n, cons
     {
         for (uint8_t tileBitPos = 0;  tileBitPos < 8; tileBitPos++)
         {
-            uint8_t colorIndex =  ( tile[tileIndex]  >> tileBitPos & 0x01) | (((tile[tileIndex + 1] >> tileBitPos ) & 0x01)  << 1);
+            uint8_t colorIndex =  (tile[tileIndex]  >> tileBitPos & 0x01) | (((tile[tileIndex + 1] >> tileBitPos ) & 0x01)  << 1);
 
-            const uint64_t pixelIndex = (x - tileBitPos) + ((GB_DISPLAY_WIDHT) * (tileIndex / 2));
+            const uint64_t pixelIndex = (x - tileBitPos) + (GB_DISPLAY_WIDHT * (tileIndex / 2));
             pixels[pixelIndex] = pallete[colorIndex];
         }
     }
 }
 
-    static int x = 0,y = 0;
-
+static int x = 0,y = 0;
 // TODO: THIS FUNCTION ONLY DOES MINIMAL TILE RENDERING AND IS A TEST... (LCD CONTROLLER GOES HERE ALONG WITH THE PPU.. PROCESING)
 void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
 {
@@ -350,6 +349,6 @@ void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
     }
 
     // Render sample tiles
-    GB_RenderTile(pixels, gameboy_tile, 1, 50, 50);
-    GB_RenderTile(pixels, somePokemonTile, 1, 100, 100);
+    GB_RenderTile(pixels, gameboy_tile, 1, 50, 0);
+    GB_RenderTile(pixels, somePokemonTile, 1, 50, 100);
 }

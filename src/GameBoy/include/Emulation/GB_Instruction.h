@@ -2,6 +2,8 @@
 #define GB_INSTRUCTION_H
 #include <Emulation/GB_SystemContext.h>
 
+typedef uint8_t (*instructionFnPtrGb)(EmulationState *ctx);
+
 typedef struct {
     uint16_t maskl;
     // uint16_t maskh;

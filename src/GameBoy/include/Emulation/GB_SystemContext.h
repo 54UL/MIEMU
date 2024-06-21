@@ -17,6 +17,5 @@ typedef struct
     GB_Header       *header;
 } EmulationState;
 
-typedef uint8_t (*instructionFnPtrGb)(EmulationState *ctx);
 
 #endif

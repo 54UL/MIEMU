@@ -1754,6 +1754,9 @@ uint8_t GB_RST_N(EmulationState *ctx)
 uint8_t GB_CB_PREFIX_INSTRUCTIONS(EmulationState *ctx)
 {
     // INSERT HERE THE DECODING PROCESSES OF CB PREFIX INSTRUCTIONS...
+    MNE_Log("CB Prefix  called, next byte is: %02X]\n", ctx->memory[ctx->registers->PC++]);
+    
+    return 1;
 }
 
 uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc)

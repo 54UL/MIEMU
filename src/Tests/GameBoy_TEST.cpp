@@ -10,7 +10,7 @@ RESOURCES:
 */
 
 // #define TEST_ROOM_PATH "../../../ROMS/GameBoy/blargg-ld_r_r.gb"
-#define BIOS_PATH "../../../ROMS/GameBoy/bios.gb"
+#define BIOS_PATH "../../../roms/gameboy/bios.gb"
 
 #define ExpectMessage(instr, message) "GB INSTRUCTION [" << #instr << "] EXPECTED: " << #message
 #define GB_DEBUG

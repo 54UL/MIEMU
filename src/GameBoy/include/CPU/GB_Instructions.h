@@ -27,7 +27,7 @@ uint8_t GB_LDH_N_A(EmulationState *ctx);
 uint8_t GB_LDH_A_C(EmulationState *ctx);
 uint8_t GB_LDH_C_A(EmulationState *ctx);
 uint8_t GB_LDI_HL_A(EmulationState *ctx);
-uint8_t GB_LDI_A_HL(EmulationState *ctx);
+uint8_t GB_LDI_A_HL(EmulationState *ctx);   
 uint8_t GB_LDD_HL_A(EmulationState *ctx);
 uint8_t GB_LDD_A_HL(EmulationState *ctx);
 

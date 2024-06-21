@@ -16,14 +16,16 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         //-------------MASK----OPCODE--HANDLER
         GB_INSTRUCTION(0xFF, 0x0000, GB_NOP),
 
-        // LD_R_R
+        // LD 8 BIT INSTRUCTIONS
         GB_INSTRUCTION(0XC0, 0x40, GB_LD_R_R),
-
-        // LD_R_N
         GB_INSTRUCTION(0xC7, 0x0006, GB_LD_R_N),
-
-        // LD_R_HL
         GB_INSTRUCTION(0xC7, 0x46, GB_LD_R_HL),
+
+        // Missing ld instructions (re-order when completed...)
+        GB_INSTRUCTION(0xFF, 0X22, GB_LDI_HL_A),
+        GB_INSTRUCTION(0xFF, 0x2A, GB_LDI_A_HL),
+        GB_INSTRUCTION(0xFF, 0x3A, GB_LDD_A_HL),
+        GB_INSTRUCTION(0xFF, 0x32, GB_LDD_HL_A),
 
         // 16 BIT LOAD INSTRUCTIONS
         GB_INSTRUCTION(0xCF, 0x01, GB_LD_RR_NN),
@@ -79,19 +81,21 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x10, GB_STOP),
         GB_INSTRUCTION(0xFF, 0xF3, GB_DI),
         GB_INSTRUCTION(0xFF, 0xFB, GB_EI),
-
+        
         // JUMP INSTRUCTIONS
-        // GB_INSTRUCTION(0xFFFF, 0xC3, GB_JP_NN),
-        // GB_INSTRUCTION(0xFFFF, 0xE9, GB_JP_HL),
-        // GB_INSTRUCTION(0xFFFF, 0xC2, GB_JP_CC_NN),
-        // GB_INSTRUCTION(0x00F8, 0x18, GB_JR_E),
-        // GB_INSTRUCTION(0x00F8, 0x20, GB_JR_CC_E),
-        // GB_INSTRUCTION(0xFFFF, 0xCD, GB_CALL_NN),
-        // GB_INSTRUCTION(0xFFFF, 0xC4, GB_CALL_CC_NN),
-        // GB_INSTRUCTION(0xFFFF, 0xC9, GB_RET),
-        // GB_INSTRUCTION(0xFFFF, 0xC0, GB_RET_CC),
-        // GB_INSTRUCTION(0xFFFF, 0xD9, GB_RETI),
-        // GB_INSTRUCTION(0xFFFF, 0xC7, GB_RST_N)
+        GB_INSTRUCTION(0xFFFF, 0xC3, GB_JP_NN),
+        GB_INSTRUCTION(0xFFFF, 0xE9, GB_JP_HL),
+        GB_INSTRUCTION(0xFFFF, 0xC2, GB_JP_CC_NN),
+        GB_INSTRUCTION(0x00F8, 0x18, GB_JR_E),
+        GB_INSTRUCTION(0x00F8, 0x20, GB_JR_CC_E),
+        GB_INSTRUCTION(0xFFFF, 0xCD, GB_CALL_NN),
+        GB_INSTRUCTION(0xFFFF, 0xC4, GB_CALL_CC_NN),
+        GB_INSTRUCTION(0xFFFF, 0xC9, GB_RET),
+        GB_INSTRUCTION(0xFFFF, 0xC0, GB_RET_CC),
+        GB_INSTRUCTION(0xFFFF, 0xD9, GB_RETI),
+        GB_INSTRUCTION(0xFFFF, 0xC7, GB_RST_N),
+
+        GB_INSTRUCTION(0XFF,0XCB, GB_CB_PREFIX_INSTRUCTIONS)
     };
 
 uint8_t GB_Initialize(int argc, const char ** argv)
@@ -342,10 +346,8 @@ void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
     
     // Pallete rendering test
     for (int j = 0; j < 4; j++)
-    {
-        const uint64_t pixelIndex = j;
-                
-        pixels[pixelIndex] = pallete[j];
+    {        
+        pixels[j] = pallete[j];
     }
 
     GB_RenderTile(pixels, gameboy_tile, GB_DISPLAY_WIDHT / 2 , GB_DISPLAY_HEIGHT / 2);

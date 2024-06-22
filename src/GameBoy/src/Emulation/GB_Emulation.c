@@ -12,17 +12,28 @@ static uint32_t s_instructionLenght = 0;
 
 static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
     {
-        // 8-BIT LOAD INSTRUCTIONS
         //-------------MASK----OPCODE--HANDLER
-        GB_INSTRUCTION(0xFF, 0x0000, GB_NOP),
+        GB_INSTRUCTION(0xFF, 0x00, GB_NOP),
 
-        // LD 8 BIT INSTRUCTIONS
+        // 8-BIT LOAD INSTRUCTIONS
         GB_INSTRUCTION(0XC0, 0x40, GB_LD_R_R),
-        GB_INSTRUCTION(0xC7, 0x0006, GB_LD_R_N),
+        GB_INSTRUCTION(0xC7, 0x06, GB_LD_R_N),
         GB_INSTRUCTION(0xC7, 0x46, GB_LD_R_HL),
 
-        // Missing ld instructions (re-order when completed...)
-        GB_INSTRUCTION(0xFF, 0X22, GB_LDI_HL_A),
+        GB_INSTRUCTION(0xF8, 0x70, GB_LD_HL_R),
+        GB_INSTRUCTION(0xFF, 0x36, GB_LD_HL_N),
+        GB_INSTRUCTION(0xFF, 0x0A, GB_LD_A_BC),
+        GB_INSTRUCTION(0xFF, 0x1A, GB_LD_A_DE),
+        GB_INSTRUCTION(0xFF, 0xFA, GB_LD_A_NN),
+        GB_INSTRUCTION(0xFF, 0x02, GB_LD_BC_A),
+        GB_INSTRUCTION(0xFF, 0x12, GB_LD_DE_A),
+        GB_INSTRUCTION(0xFF, 0xEA, GB_LD_NN_A),
+        GB_INSTRUCTION(0xFF, 0xF0, GB_LDH_A_N),
+        GB_INSTRUCTION(0xFF, 0xE0, GB_LDH_N_A),
+
+        GB_INSTRUCTION(0xFF, 0xF2, GB_LDH_A_C),
+        GB_INSTRUCTION(0xFF, 0xE2, GB_LDH_C_A),
+        GB_INSTRUCTION(0xFF, 0x22, GB_LDI_HL_A),
         GB_INSTRUCTION(0xFF, 0x2A, GB_LDI_A_HL),
         GB_INSTRUCTION(0xFF, 0x3A, GB_LDD_A_HL),
         GB_INSTRUCTION(0xFF, 0x32, GB_LDD_HL_A),
@@ -39,7 +50,7 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0xC6, GB_ADD_A_N),
         GB_INSTRUCTION(0xFF, 0x86, GB_ADD_A_HL),
         GB_INSTRUCTION(0xF8, 0x88, GB_ADC_A_R),
-        GB_INSTRUCTION(0xFF, 0x08, GB_ADC_A_N),
+        GB_INSTRUCTION(0xFF, 0XCE, GB_ADC_A_N),
         GB_INSTRUCTION(0xFF, 0x8E, GB_ADC_A_HL),
         GB_INSTRUCTION(0xF8, 0x90, GB_SUB_R),
         GB_INSTRUCTION(0xFF, 0x10, GB_SUB_N),
@@ -57,11 +68,11 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x30, GB_OR_N),
         GB_INSTRUCTION(0xFF, 0xB6, GB_OR_HL),
         GB_INSTRUCTION(0xF8, 0xB8, GB_CP_R),
-        GB_INSTRUCTION(0xFF, 0x38, GB_CP_N),
+        GB_INSTRUCTION(0xFF, 0xFE, GB_CP_N),
         GB_INSTRUCTION(0xFF, 0xBE, GB_CP_HL),
-        GB_INSTRUCTION(0xF8, 0x04, GB_INC_R),
+        GB_INSTRUCTION(0xC7, 0x04, GB_INC_R),
         GB_INSTRUCTION(0xFF, 0x34, GB_INC_HL),
-        GB_INSTRUCTION(0xF8, 0x05, GB_DEC_R),
+        GB_INSTRUCTION(0xC7, 0x05, GB_DEC_R),
         GB_INSTRUCTION(0xFF, 0x35, GB_DEC_HL),
         GB_INSTRUCTION(0xFF, 0x27, GB_DAA),
         GB_INSTRUCTION(0xFF, 0x2F, GB_CPL),
@@ -73,6 +84,13 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0xE8, GB_ADD_SP_DD),
         GB_INSTRUCTION(0xFF, 0xF8, GB_LD_HL_SP_PLUS_DD),
 
+        // ROTATE AND SHIFT INSTRUCTIONS
+        GB_INSTRUCTION(0xFF, 0x07, GB_RLCA),
+        GB_INSTRUCTION(0xFF, 0x17, GB_RLA),
+        GB_INSTRUCTION(0xFF, 0x0F, GB_RRCA),
+        GB_INSTRUCTION(0xFF, 0x1F, GB_RRA),
+
+
         // CPU CONTROL INSTRUCTIONS
         GB_INSTRUCTION(0xFF, 0x00, GB_NOP), // THIS MF SHOULD BE AT THE START
         GB_INSTRUCTION(0xFF, 0x3F, GB_CCF),
@@ -83,18 +101,20 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0xFB, GB_EI),
         
         // JUMP INSTRUCTIONS
-        GB_INSTRUCTION(0xFFFF, 0xC3, GB_JP_NN),
-        GB_INSTRUCTION(0xFFFF, 0xE9, GB_JP_HL),
-        GB_INSTRUCTION(0xFFFF, 0xC2, GB_JP_CC_NN),
-        GB_INSTRUCTION(0x00F8, 0x18, GB_JR_E),
-        GB_INSTRUCTION(0x00F8, 0x20, GB_JR_CC_E),
-        GB_INSTRUCTION(0xFFFF, 0xCD, GB_CALL_NN),
-        GB_INSTRUCTION(0xFFFF, 0xC4, GB_CALL_CC_NN),
-        GB_INSTRUCTION(0xFFFF, 0xC9, GB_RET),
-        GB_INSTRUCTION(0xFFFF, 0xC0, GB_RET_CC),
-        GB_INSTRUCTION(0xFFFF, 0xD9, GB_RETI),
-        GB_INSTRUCTION(0xFFFF, 0xC7, GB_RST_N),
+        GB_INSTRUCTION(0xFF, 0xC3, GB_JP_NN),
+        GB_INSTRUCTION(0xFF, 0xE9, GB_JP_HL),
+        GB_INSTRUCTION(0xFF, 0xC2, GB_JP_CC_NN),
+        GB_INSTRUCTION(0xF8, 0x18, GB_JR_E),
+        GB_INSTRUCTION(0xF8, 0x20, GB_JR_CC_E),
+        GB_INSTRUCTION(0xFF, 0xCD, GB_CALL_NN),
+        GB_INSTRUCTION(0xFF, 0xC4, GB_CALL_CC_NN),
+        GB_INSTRUCTION(0xFF, 0xC9, GB_RET),
+        GB_INSTRUCTION(0xFF, 0xC0, GB_RET_CC),
+        GB_INSTRUCTION(0xFF, 0xD9, GB_RETI),
+        GB_INSTRUCTION(0xFF, 0xC7, GB_RST_N),
 
+        //
+        // The whole cb prefix instructions
         GB_INSTRUCTION(0XFF,0XCB, GB_CB_PREFIX_INSTRUCTIONS)
     };
 
@@ -308,7 +328,6 @@ EmulationInfo GB_GetInfo()
 }
 
 const uint32_t pallete[] = {0x9BBC0FFF , 0x8BAC0FFF, 0x306230FF, 0x0F380FFF}; // green shades
-// const uint32_t pallete[] = {0xFFFFFFFF , 0XE0E0E0FF, 0XA0A0A0FF, 0x000000FF}; // gray shades
  
 // Renders n 8x8 pixel tiles
 void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t x, const uint16_t y)
@@ -335,14 +354,15 @@ void GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h)
 
     // TODO: Make this pattern default startup screen on the sdl app screen initialiazation
     // rendering has to be performed from upper left side of the screen...
-    // for (int i = 0; i < GB_DISPLAY_HEIGHT; i++)
-    // {
-    //     for (int j = 0; j < GB_DISPLAY_WIDHT; j++)
-    //     {
-    //         const uint64_t pixelIndex = i * GB_DISPLAY_WIDHT + j;
+    for (int i = 0; i < GB_DISPLAY_HEIGHT; i++)
+    {
+        for (int j = 0; j < GB_DISPLAY_WIDHT; j++)
+        {
+            const uint64_t pixelIndex = i * GB_DISPLAY_WIDHT + j;
                     
-    //         pixels[pixelIndex] = pallete[(i + j) % 2];
-    //     }
+            pixels[pixelIndex] = pallete[(i + j) % 2];
+        }
+    }
     
     // Pallete rendering test
     for (int j = 0; j < 4; j++)

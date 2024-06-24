@@ -98,41 +98,28 @@ uint8_t GB_JP_HL(EmulationState *ctx);
 uint8_t GB_JP_CC_NN(EmulationState *ctx);
 uint8_t GB_JR_E(EmulationState *ctx);
 uint8_t GB_JR_CC_E(EmulationState *ctx);
-
 uint8_t GB_CALL_NN(EmulationState *ctx);
 uint8_t GB_CALL_CC_NN(EmulationState *ctx);
-
 uint8_t GB_RET(EmulationState *ctx);
 uint8_t GB_RET_CC(EmulationState *ctx);
 uint8_t GB_RETI(EmulationState *ctx);
-
 uint8_t GB_RST_N(EmulationState *ctx);
 
 // CB PREFIX HELL
-uint8_t GB_CB_PREFIX_INSTRUCTIONS(EmulationState *ctx);
+uint8_t GB_CB_PREFIX(EmulationState *ctx);
 
 uint8_t GB_RLC_R(EmulationState *ctx);
-uint8_t GB_RLC_HL(EmulationState *ctx);
 uint8_t GB_RL_R(EmulationState *ctx);
-uint8_t GB_RL_HL(EmulationState *ctx);
 uint8_t GB_RRC_R(EmulationState *ctx);
-uint8_t GB_RRC_HL(EmulationState *ctx);
 uint8_t GB_RR_R(EmulationState *ctx);
-uint8_t GB_RR_HL(EmulationState *ctx);
 uint8_t GB_SLA_R(EmulationState *ctx);
-uint8_t GB_SLA_HL(EmulationState *ctx);
 uint8_t GB_SWAP_R(EmulationState *ctx);
-uint8_t GB_SWAP_HL(EmulationState *ctx);
 uint8_t GB_SRA_R(EmulationState *ctx);
-uint8_t GB_SRA_HL(EmulationState *ctx);
 uint8_t GB_SRL_R(EmulationState *ctx);
-uint8_t GB_SRL_HL(EmulationState *ctx);
+
 uint8_t GB_CB_BIT_N_R(EmulationState *ctx);   
-uint8_t GB_CB_BIT_N_HL(EmulationState *ctx);
 uint8_t GB_CB_SET_N_R(EmulationState *ctx);   
-uint8_t GB_CB_SET_N_HL(EmulationState *ctx);
 uint8_t GB_CB_RES_N_R(EmulationState *ctx);   
-uint8_t GB_CB_RES_N_HL(EmulationState *ctx);
 
 // AXULIAR DECODING FUNCTIONS
 uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc);

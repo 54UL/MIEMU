@@ -315,32 +315,27 @@ void CPU_BIOS_Test(const Emulation *emulator, const EmulationState *emulationCtx
     RunProgram(emulator, emulationCtx, buffer.data(), buffer.size() - 1);
 }
 
-// TEST_F(GameBoyFixture, Load_And_Store_8bit)
-// {
-//     Load_And_Store_Tests_8bit(emulator, emulationCtx);
-// }
+TEST_F(GameBoyFixture, Load_And_Store_8bit)
+{
+    Load_And_Store_Tests_8bit(emulator, emulationCtx);
+}
 
-// TEST_F(GameBoyFixture, Load_And_Store_16bit)
-// {
-//     Load_And_Store_Tests_16bit(emulator, emulationCtx);
-// }
+TEST_F(GameBoyFixture, Load_And_Store_16bit)
+{
+    Load_And_Store_Tests_16bit(emulator, emulationCtx);
+}
 
-// TEST_F(GameBoyFixture, ALU_8Bit)
-// {
-//     CPU_ALU_Tests_8bit(emulator, emulationCtx);
-// }
+TEST_F(GameBoyFixture, ALU_8Bit)
+{
+    CPU_ALU_Tests_8bit(emulator, emulationCtx);
+}
 
-// TEST_F(GameBoyFixture, ALU_16Bit)
-// {
-//     CPU_ALU_Tests_16bit(emulator, emulationCtx);
-// }
+TEST_F(GameBoyFixture, ALU_16Bit)
+{
+    CPU_ALU_Tests_16bit(emulator, emulationCtx);
+}
 
 TEST_F(GameBoyFixture, BIOS_TEST)
 {
     CPU_BIOS_Test(emulator, emulationCtx);
 }
-
-// TEST_F(GameBoyFixture, Load_And_Store_8bit)
-// {
-//     Load_And_Store_Tests_8bit(emulator, emulationCtx);
-// }

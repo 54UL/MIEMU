@@ -308,7 +308,7 @@ void CPU_BIOS_Test(const Emulation *emulator, const EmulationState *emulationCtx
     // Create a vector to hold the file data
     std::vector<uint8_t> buffer(size);
 
-    EXPECT_TRUE(size == 256); // 256 BYTES....
+    EXPECT_TRUE(size == 256); // 256 BYTES, the last byte is supposed to be a nop
     EXPECT_TRUE(biosFile.read(reinterpret_cast<char *>(buffer.data()), size));
     MNE_HexDump(buffer.data(), buffer.size());
 

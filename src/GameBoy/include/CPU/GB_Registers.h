@@ -29,14 +29,6 @@
 #define GB_SET_F(FLAG, VALUE) tmpRegF |= ((VALUE) << FLAG)
 #define GB_TEST_F(CTX, FLAG) ((CTX->registers->F >> FLAG) & 0X01)
 
-// typedef struct {
-//     union 
-//     {
-       
-//     };
-    
-// } StatusRegister;
-
 typedef struct 
 {
      union {

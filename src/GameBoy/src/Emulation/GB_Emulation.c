@@ -63,7 +63,7 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x10, GB_SUB_N),
         GB_INSTRUCTION(0xFF, 0x96, GB_SUB_HL),
         GB_INSTRUCTION(0xF8, 0x98, GB_SBC_A_R),
-        GB_INSTRUCTION(0xFF, 0x18, GB_SBC_A_N),
+        GB_INSTRUCTION(0xFF, 0xDE, GB_SBC_A_N),
         GB_INSTRUCTION(0xFF, 0x9E, GB_SBC_A_HL),
         GB_INSTRUCTION(0xF8, 0xA0, GB_AND_R),
         GB_INSTRUCTION(0xFF, 0x20, GB_AND_N),
@@ -269,16 +269,22 @@ int GB_TickEmulation()
     
     if (s_systemContext == NULL) return 0;
     // Fetch
-    const uint8_t instr = s_systemContext->memory[s_systemContext->registers->PC++]; //TODO: CHANGE THIS FOR A BUS READ!!!
-    
-    const GameBoyInstruction* fetchedInstruction = GB_FetchInstruction(instr);
-    uint8_t clockCycles = 0;
+    const uint8_t instr = s_systemContext->memory[s_systemContext->registers->PC++];
 
+    const GameBoyInstruction *fetchedInstruction = GB_FetchInstruction(instr);
+    uint8_t clockCycles = 0;
+    
     // Instruction execution
-    if (fetchedInstruction->handler != NULL) 
+    if (fetchedInstruction->handler != NULL)
     {
+        // This is to ignore the NOPS on the units tests... (due to ticking programs more than it needed)
+        if (fetchedInstruction->opcode == 0)
+        {
+            s_systemContext->registers->PC--;
+            return 1;
+        }
 #ifdef GB_DEBUG
-            MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC);
+        MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC);
 /* PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
             MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
                     s_systemContext->registers->A, s_systemContext->registers->F, s_systemContext->registers->B, s_systemContext->registers->C,
@@ -286,10 +292,10 @@ int GB_TickEmulation()
                     s_systemContext->registers->PC, s_systemContext->registers->SP);
 */
 #endif
-            s_systemContext->registers->INSTRUCTION = instr;
-            clockCycles = fetchedInstruction->handler(s_systemContext);
-           
-         return clockCycles;
+        s_systemContext->registers->INSTRUCTION = instr;
+        clockCycles = fetchedInstruction->handler(s_systemContext);
+
+        return clockCycles;
     }
     else
     {

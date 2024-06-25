@@ -66,7 +66,7 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0xDE, GB_SBC_A_N),
         GB_INSTRUCTION(0xFF, 0x9E, GB_SBC_A_HL),
         GB_INSTRUCTION(0xF8, 0xA0, GB_AND_R),
-        GB_INSTRUCTION(0xFF, 0x20, GB_AND_N),
+        GB_INSTRUCTION(0xFF, 0xE6, GB_AND_N),
         GB_INSTRUCTION(0xFF, 0xA6, GB_AND_HL),
         GB_INSTRUCTION(0xF8, 0xA8, GB_XOR_R),
         GB_INSTRUCTION(0xFF, 0x28, GB_XOR_N),

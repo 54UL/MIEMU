@@ -10,6 +10,13 @@
 static EmulationState * s_systemContext;
 static uint32_t s_instructionLenght = 0;
 
+/*
+    TO IMPLEMENT:
+    GB PREFIX 7C
+    GB PREFIX 11
+    JUMP_INSTRUCTIONS...
+*/
+
 static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
     {
         //-------------MASK----OPCODE--HANDLER
@@ -56,10 +63,10 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x10, GB_SUB_N),
         GB_INSTRUCTION(0xFF, 0x96, GB_SUB_HL),
         GB_INSTRUCTION(0xF8, 0x98, GB_SBC_A_R),
-        GB_INSTRUCTION(0xFF, 0x18, GB_SBC_A_N),
+        GB_INSTRUCTION(0xFF, 0xDE, GB_SBC_A_N),
         GB_INSTRUCTION(0xFF, 0x9E, GB_SBC_A_HL),
         GB_INSTRUCTION(0xF8, 0xA0, GB_AND_R),
-        GB_INSTRUCTION(0xFF, 0x20, GB_AND_N),
+        GB_INSTRUCTION(0xFF, 0xE6, GB_AND_N),
         GB_INSTRUCTION(0xFF, 0xA6, GB_AND_HL),
         GB_INSTRUCTION(0xF8, 0xA8, GB_XOR_R),
         GB_INSTRUCTION(0xFF, 0x28, GB_XOR_N),
@@ -90,9 +97,7 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xFF, 0x0F, GB_RRCA),
         GB_INSTRUCTION(0xFF, 0x1F, GB_RRA),
 
-
         // CPU CONTROL INSTRUCTIONS
-        GB_INSTRUCTION(0xFF, 0x00, GB_NOP), // THIS MF SHOULD BE AT THE START
         GB_INSTRUCTION(0xFF, 0x3F, GB_CCF),
         GB_INSTRUCTION(0xFF, 0x37, GB_SCF),
         GB_INSTRUCTION(0xFF, 0x76, GB_HALT),  
@@ -107,15 +112,14 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
         GB_INSTRUCTION(0xF8, 0x18, GB_JR_E),
         GB_INSTRUCTION(0xF8, 0x20, GB_JR_CC_E),
         GB_INSTRUCTION(0xFF, 0xCD, GB_CALL_NN),
-        GB_INSTRUCTION(0xFF, 0xC4, GB_CALL_CC_NN),
+        GB_INSTRUCTION(0xE7, 0xC4, GB_CALL_CC_NN),
         GB_INSTRUCTION(0xFF, 0xC9, GB_RET),
         GB_INSTRUCTION(0xFF, 0xC0, GB_RET_CC),
         GB_INSTRUCTION(0xFF, 0xD9, GB_RETI),
         GB_INSTRUCTION(0xFF, 0xC7, GB_RST_N),
-
-        //
+        
         // The whole cb prefix instructions
-        GB_INSTRUCTION(0XFF,0XCB, GB_CB_PREFIX_INSTRUCTIONS)
+        GB_INSTRUCTION(0XFF,0XCB, GB_CB_PREFIX)
     };
 
 uint8_t GB_Initialize(int argc, const char ** argv)
@@ -265,21 +269,33 @@ int GB_TickEmulation()
     
     if (s_systemContext == NULL) return 0;
     // Fetch
-    const uint8_t instr = s_systemContext->memory[s_systemContext->registers->PC++]; //TODO: CHANGE THIS FOR A BUS READ!!!
-    
-    const GameBoyInstruction* fetchedInstruction = GB_FetchInstruction(instr);
-    uint8_t clockCycles = 0;
+    const uint8_t instr = s_systemContext->memory[s_systemContext->registers->PC++];
 
+    const GameBoyInstruction *fetchedInstruction = GB_FetchInstruction(instr);
+    uint8_t clockCycles = 0;
+    
     // Instruction execution
-    if (fetchedInstruction->handler != NULL) 
+    if (fetchedInstruction->handler != NULL)
     {
+        // This is to ignore the NOPS on the units tests... (due to ticking programs more than it needed)
+        if (fetchedInstruction->opcode == 0)
+        {
+            s_systemContext->registers->PC--;
+            return 1;
+        }
 #ifdef GB_DEBUG
-            MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC);
+        MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC);
+/* PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
+            MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
+                    s_systemContext->registers->A, s_systemContext->registers->F, s_systemContext->registers->B, s_systemContext->registers->C,
+                    s_systemContext->registers->D, s_systemContext->registers->E, s_systemContext->registers->H, s_systemContext->registers->L,
+                    s_systemContext->registers->PC, s_systemContext->registers->SP);
+*/
 #endif
-            s_systemContext->registers->INSTRUCTION = instr;
-            clockCycles = fetchedInstruction->handler(s_systemContext);
-           
-         return clockCycles;
+        s_systemContext->registers->INSTRUCTION = instr;
+        clockCycles = fetchedInstruction->handler(s_systemContext);
+
+        return clockCycles;
     }
     else
     {

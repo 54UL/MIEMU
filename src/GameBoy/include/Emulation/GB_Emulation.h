@@ -7,7 +7,8 @@
 #include <stdlib.h>
 #include <Memory/GB_Header.h>
 
-#define GB_INVALID_INSTRUCTION 0xAEAE
+//0XD3 IS THE FIRST NOT VALID DMG OPCODE 
+#define GB_INVALID_INSTRUCTION 0xD3
 // CPU FREQ  4.194304 hz or 238.41857910156 ns
 #define GB_DMG_CPU_FREQ_NS 238.41f
 

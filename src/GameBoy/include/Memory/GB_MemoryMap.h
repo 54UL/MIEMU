@@ -56,7 +56,7 @@ $FFFF      | [IE]        | Interrupt enable                                     
 #define GB_HRAM_END 0xFFFE
 
 // actually used
-#define GB_IE_REGISTER 0xFFFF
+#define GB_IE_REGISTER 0xFFFE
 #define GB_IF_REGISTER 0xFF0F
 
 #define GB_HALT_REGISTER 0xFF50

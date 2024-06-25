@@ -303,7 +303,9 @@ void CPU_BIOS_Test(const Emulation *emulator, const EmulationState *emulationCtx
     EXPECT_TRUE(biosFile.read(reinterpret_cast<char *>(buffer.data()), size));
     MNE_HexDump(buffer.data(), buffer.size());
 
-    RunProgram(emulator, emulationCtx, buffer.data(), buffer.size() - 1);
+    RunProgram(emulator, emulationCtx, buffer.data(), buffer.size());
+    EXPECT_TRUE(emulationCtx->registers->PC == 0x00FE) << "PC SHOULD BE AT 0XFE WHEN FINISHING EXECUTING THE BIOS...";
+    EXPECT_TRUE(emulationCtx->registers->INSTRUCTION == 0xE0) << "Last instruction must be (0xE0):	[LD (0xFF00+0x50),A	; 0x00fe;turn off DMG rom]";
 }
 
 TEST_F(GameBoyFixture, Load_And_Store_8bit)

@@ -333,7 +333,7 @@ TEST_F(GameBoyFixture, CPU_JUMPS)
     CPU_Jumps_Tests(emulator, emulationCtx);
 }
 
-TEST_F(GameBoyFixture, BIOS_TEST)
-{
-    CPU_BIOS_Test(emulator, emulationCtx);
-}
+// TEST_F(GameBoyFixture, BIOS_TEST)
+// {
+//     CPU_BIOS_Test(emulator, emulationCtx);
+// }

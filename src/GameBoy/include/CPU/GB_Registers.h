@@ -29,6 +29,7 @@
 #define GB_SET_F(FLAG, VALUE) tmpRegF |= ((VALUE) << FLAG)
 #define GB_TEST_F(CTX, FLAG) ((CTX->registers->F >> FLAG) & 0X01)
 
+
 typedef struct 
 {
      union {
@@ -40,7 +41,16 @@ typedef struct
             uint8_t H;
             uint8_t L;
             uint8_t A;
-            uint8_t F;
+
+            union
+            {
+                uint8_t ZERO_FLAG : GB_ZERO_FLAG;
+                uint8_t N_FLAG : GB_N_FLAG;
+                uint8_t H_CARRY_FLAG : GB_H_FLAG;
+                uint8_t CARRY_FLAG : GB_C_FLAG;
+
+                uint8_t F;
+            };
         };
         struct {
             uint16_t BC;

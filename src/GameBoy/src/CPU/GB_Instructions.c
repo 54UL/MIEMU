@@ -350,15 +350,12 @@ uint8_t GB_ADD_A_R(EmulationState *ctx)
 
     ctx->registers->A = sum;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F) );
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
-    
+    // Flag manipulation
+    ctx->registers->ZERO_FLAG = sum == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = sum > 0x0F;
+    ctx->registers->CARRY_FLAG = sum > 0xFF;
+
     return 4;
 }
 
@@ -431,9 +428,9 @@ uint8_t GB_ADC_A_R(EmulationState *ctx)
     */
 
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-
-    const uint16_t sum =  ctx->registers->A + c + GB_GetReg8(ctx, rr);
+    // const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
+    
+    const uint16_t sum =  ctx->registers->A + ctx->registers->CARRY_FLAG + GB_GetReg8(ctx, rr);
     ctx->registers->A = sum;
 
     GB_TMP_F();
@@ -602,9 +599,8 @@ uint8_t GB_SBC_A_R(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const int sum =  ctx->registers->A - c - GB_GetReg8(ctx, rr);
+    const int sum =  ctx->registers->A - ctx->registers->CARRY_FLAG - GB_GetReg8(ctx, rr);
     ctx->registers->A = sum;
 
     GB_TMP_F();

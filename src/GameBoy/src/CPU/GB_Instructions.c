@@ -1222,7 +1222,7 @@ uint8_t GB_RRC_R(EmulationState *ctx)
     /*
         rotate right r
     */
-    MNE_Log("[GB_RRC_R]\n");
+    MNE_Log("[GB_RRC_R][NOT IMPLEMENTED]\n");
 
    return 1; // TODO: CHECK  TIMING...
 }
@@ -1512,10 +1512,10 @@ uint8_t GB_JR_CC_E(EmulationState *ctx)
     */
 
     const uint8_t cc = (ctx->registers->INSTRUCTION & 0x18) >> 3;
+    const int8_t nn_signed = GB_BusRead(ctx, ctx->registers->PC++);
 
     if (GB_ResolveCondition(ctx, cc))
     {
-        const int8_t nn_signed = GB_BusRead(ctx, ctx->registers->PC++);
         ctx->registers->PC += nn_signed;
         return 3;
     }

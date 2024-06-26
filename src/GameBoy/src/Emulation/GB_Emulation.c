@@ -284,7 +284,7 @@ int GB_TickEmulation()
             return 1;
         }
 #ifdef GB_DEBUG
-        MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC);
+        MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC - 1);
 /* PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
             MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
                     s_systemContext->registers->A, s_systemContext->registers->F, s_systemContext->registers->B, s_systemContext->registers->C,

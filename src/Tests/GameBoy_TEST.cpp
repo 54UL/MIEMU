@@ -83,7 +83,8 @@ void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, c
     emulationCtx->registers->PC = 0;
 
     // Process instructions...
-    for (int i = 0; i < programLength; i++)
+    // Iterations != program lenght so, for the  moment im iterating the emulation 256 steps to avoid loop steps locks
+    for (int i = 0; i < 0xFF; i++)
     {
         // Step emulation (if clock cycles == 0 is an error)
         if (emulator->TickEmulation() == 0) 

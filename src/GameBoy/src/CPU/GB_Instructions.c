@@ -210,10 +210,11 @@ uint8_t GB_LDI_HL_A(EmulationState *ctx)
 {
     // encoding: 0b00100010
     /*
-        write(HL++, A)
+         write_memory(addr=HL, data=A); HL = HL + 1
     */
+   
     GB_BusWrite(ctx, ctx->registers->HL++, ctx->registers->A);
-    return 1; // TODO, PLACEHOLDER TIMING...
+    return 2;
 }
 
 uint8_t GB_LDI_A_HL(EmulationState *ctx)
@@ -303,17 +304,19 @@ uint8_t GB_PUSH_RR(EmulationState *ctx)
 {
     //encoding: 0b11xx0101,xx : 0x30
     /*
-        SP--
-        write(SP--, msb(BC))
-        write(SP, lsb(BC))
+        SP = SP - 1
+        write_memory(addr=SP, data=msb(BC)); SP = SP - 1
+        write_memory(addr=SP, data=lsb(BC))
     */
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4;
-    uint16_t drr = GB_GetReg16(ctx, rr, REG16_MODE_SP);
+    
+    uint16_t drr = GB_GetReg16(ctx, rr, REG16_MODE_AF);
     const uint8_t l = drr & 0xFF;
     const uint8_t h = (drr >> 8) & 0xFF;
 
     ctx->registers->SP--;
-    GB_BusWrite(ctx, ctx->registers->SP--, h);
+    GB_BusWrite(ctx, ctx->registers->SP, h);
+    ctx->registers->SP--;
     GB_BusWrite(ctx, ctx->registers->SP, l);
 }
 
@@ -979,10 +982,10 @@ uint8_t GB_DEC_R(EmulationState *ctx)
         flags.N = 1
         flags.H = 1 if carry_per_bit[3] else 0
     */
-    uint8_t result = 0;
+    uint16_t result = 0;
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x38) >> 3;
-    result = GB_GetReg8(ctx, r);
-    GB_SetReg8(ctx, r, --result);
+    result = GB_GetReg8(ctx, r) - 1;
+    GB_SetReg8(ctx, r, result & 0xFF);
 
     ctx->registers->ZERO_FLAG = result == 0;
     ctx->registers->N_FLAG = 1;
@@ -1135,7 +1138,7 @@ uint8_t GB_RLCA(EmulationState *ctx)
     /*
         rotate A left trough carry
     */   
-   uint8_t shifted = ctx->registers->A << 1 <<  ctx->registers->CARRY_FLAG;
+   uint16_t shifted = ctx->registers->A << 1 <<  ctx->registers->CARRY_FLAG;
    ctx->registers->A = shifted;
 
     
@@ -1149,9 +1152,13 @@ uint8_t GB_RLA(EmulationState *ctx)
         rotate A left
     */
 
-   uint8_t shifted = ctx->registers->A << 1;
+   uint16_t shifted = ctx->registers->A << 1;
    ctx->registers->A = shifted;
    
+    ctx->registers->ZERO_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = shifted > 0xFF;
+
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1162,7 +1169,7 @@ uint8_t GB_RRCA(EmulationState *ctx)
         rotate right A through carry
     */
     
-    uint8_t shifted = ctx->registers->A >> 1 >> ctx->registers->CARRY_FLAG;
+    uint16_t shifted = ctx->registers->A >> 1 >> ctx->registers->CARRY_FLAG;
     ctx->registers->A = shifted;
 
     ctx->registers->ZERO_FLAG = 0;
@@ -1178,7 +1185,7 @@ uint8_t GB_RRA(EmulationState *ctx)
     /*
         rotate A right
     */
-    uint8_t shifted = ctx->registers->A >> 1;
+    uint16_t shifted = ctx->registers->A >> 1;
     ctx->registers->A = shifted;
 
     
@@ -1209,9 +1216,27 @@ uint8_t GB_RL_R(EmulationState *ctx)
 {
     // encoding: CB 1x
     /*
-        rotate left through carry r
+        ┌────────────────────┐
+        │ ┌──┐  ┌─────────┐  │
+        └─│CY│<─│7<──────0│<─┘
+          └──┘  └─────────┘
+                    r
     */
     MNE_Log("[GB_RL_R]\n");
+
+    uint8_t r = ctx->registers->INSTRUCTION & 0x07;
+    uint8_t rValue = GB_GetReg8(ctx, r);
+    uint8_t carryIn = ctx->registers->CARRY_FLAG;
+
+    uint8_t carryOut = (rValue & 0x80) >> 7;
+    rValue = (rValue << 1) | carryIn;       
+
+    ctx->registers->CARRY_FLAG = carryOut;
+    GB_SetReg8(ctx, r, rValue);
+
+    ctx->registers->ZERO_FLAG = rValue == 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->N_FLAG = 0;
 
    return 1; // TODO: CHECK  TIMING...
 }
@@ -1702,7 +1727,7 @@ uint8_t GB_CB_PREFIX(EmulationState *ctx)
         srl r8       0  0  1  1  1      Operand (r8) | MASK:0xF8, BASE-OP: 0x38
 
     */
-
+    
     if ((cbInstr & 0xC0) != 0x00)
     {
         uint8_t masked = cbInstr & 0xC0;

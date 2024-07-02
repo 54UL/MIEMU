@@ -210,10 +210,11 @@ uint8_t GB_LDI_HL_A(EmulationState *ctx)
 {
     // encoding: 0b00100010
     /*
-        write(HL++, A)
+         write_memory(addr=HL, data=A); HL = HL + 1
     */
+   
     GB_BusWrite(ctx, ctx->registers->HL++, ctx->registers->A);
-    return 1; // TODO, PLACEHOLDER TIMING...
+    return 2;
 }
 
 uint8_t GB_LDI_A_HL(EmulationState *ctx)
@@ -303,17 +304,19 @@ uint8_t GB_PUSH_RR(EmulationState *ctx)
 {
     //encoding: 0b11xx0101,xx : 0x30
     /*
-        SP--
-        write(SP--, msb(BC))
-        write(SP, lsb(BC))
+        SP = SP - 1
+        write_memory(addr=SP, data=msb(BC)); SP = SP - 1
+        write_memory(addr=SP, data=lsb(BC))
     */
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4;
-    uint16_t drr = GB_GetReg16(ctx, rr, REG16_MODE_SP);
+    
+    uint16_t drr = GB_GetReg16(ctx, rr, REG16_MODE_AF);
     const uint8_t l = drr & 0xFF;
     const uint8_t h = (drr >> 8) & 0xFF;
 
     ctx->registers->SP--;
-    GB_BusWrite(ctx, ctx->registers->SP--, h);
+    GB_BusWrite(ctx, ctx->registers->SP, h);
+    ctx->registers->SP--;
     GB_BusWrite(ctx, ctx->registers->SP, l);
 }
 
@@ -350,15 +353,12 @@ uint8_t GB_ADD_A_R(EmulationState *ctx)
 
     ctx->registers->A = sum;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F) );
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
-    
+    // Flag manipulation
+    ctx->registers->ZERO_FLAG = sum == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = sum > 0x0F;
+    ctx->registers->CARRY_FLAG = sum > 0xFF;
+
     return 4;
 }
 
@@ -379,14 +379,13 @@ uint8_t GB_ADD_A_N(EmulationState *ctx)
     const uint16_t sum =  ctx->registers->A + n;
     ctx->registers->A = sum;
     
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
+    ctx->registers->ZERO_FLAG = sum == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = sum > 0x0F;
+    ctx->registers->CARRY_FLAG = sum > 0xFF;
+
     //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1; //TODO: CHECK TIMING!
 }
 
 uint8_t GB_ADD_A_HL(EmulationState *ctx)
@@ -406,14 +405,10 @@ uint8_t GB_ADD_A_HL(EmulationState *ctx)
     const int sum =  ctx->registers->A + n;
     ctx->registers->A = sum;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = sum == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = sum > 0x0F;
+    ctx->registers->CARRY_FLAG = sum > 0xFF;
 
     return 8;
 }
@@ -431,19 +426,14 @@ uint8_t GB_ADC_A_R(EmulationState *ctx)
     */
 
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-
-    const uint16_t sum =  ctx->registers->A + c + GB_GetReg8(ctx, rr);
+    
+    const uint16_t sum =  ctx->registers->A + ctx->registers->CARRY_FLAG + GB_GetReg8(ctx, rr);
     ctx->registers->A = sum;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = sum == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = sum > 0x0F;
+    ctx->registers->CARRY_FLAG = sum > 0xFF;
     
     return 4;
 }
@@ -462,19 +452,14 @@ uint8_t GB_ADC_A_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const int sum =  ctx->registers->A + c + n;
+    const int sum =  ctx->registers->A + ctx->registers->CARRY_FLAG + n;
     ctx->registers->A = sum;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = sum == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = sum > 0x0F;
+    ctx->registers->CARRY_FLAG = sum > 0xFF;
 
     return 8;
 }
@@ -493,20 +478,16 @@ uint8_t GB_ADC_A_HL(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
+    
 
-    const int sum =  ctx->registers->A + c + n;
+    const int sum =  ctx->registers->A + ctx->registers->CARRY_FLAG + n;
     ctx->registers->A = sum;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
+    ctx->registers->ZERO_FLAG = sum == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = sum > 0x0F;
+    ctx->registers->CARRY_FLAG = sum > 0xFF;
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
-
     return 8;
 }
 
@@ -523,17 +504,16 @@ uint8_t GB_SUB_R(EmulationState *ctx)
     */
 
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const int sum =  ctx->registers->A - GB_GetReg8(ctx, rr);
-    ctx->registers->A = sum;
+    const int sub =  ctx->registers->A - GB_GetReg8(ctx, rr);
+    ctx->registers->A = sub;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
+    
+    return 1; //TODO: CHECK TIMINGS    
 }
 
 uint8_t GB_SUB_N(EmulationState *ctx)
@@ -550,17 +530,15 @@ uint8_t GB_SUB_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const int sum =  ctx->registers->A - n;
-    ctx->registers->A = sum;
+    const int sub =  ctx->registers->A - n;
+    ctx->registers->A = sub;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1; //TODO: CHECK TIMINGS!
 }
 
 uint8_t GB_SUB_HL(EmulationState *ctx)
@@ -577,17 +555,17 @@ uint8_t GB_SUB_HL(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
-    const int sum =  ctx->registers->A - n;
-    ctx->registers->A = sum;
+    const int sub =  ctx->registers->A - n;
+    ctx->registers->A = sub;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
     
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
+
     //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1;//TODO: CHECK TIMINGS
 }
 
 uint8_t GB_SBC_A_R(EmulationState *ctx)
@@ -602,19 +580,17 @@ uint8_t GB_SBC_A_R(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
     const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
 
-    const int sum =  ctx->registers->A - c - GB_GetReg8(ctx, rr);
-    ctx->registers->A = sum;
+    const int sub =  ctx->registers->A - ctx->registers->CARRY_FLAG - GB_GetReg8(ctx, rr);
+    ctx->registers->A = sub;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
+
     //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1;//TODO: CHECK TIMINGS
 }
 
 uint8_t GB_SBC_A_N(EmulationState *ctx)
@@ -631,18 +607,17 @@ uint8_t GB_SBC_A_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-    const int sum =  ctx->registers->A - c - n;
-    ctx->registers->A = sum;
+    
+    const int sub =  ctx->registers->A - ctx->registers->CARRY_FLAG - n;
+    ctx->registers->A = sub;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
     
     //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1;//TODO: CHECK TIMINGS
 }
 
 uint8_t GB_SBC_A_HL(EmulationState *ctx) 
@@ -659,19 +634,17 @@ uint8_t GB_SBC_A_HL(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-
-    const int sum =  ctx->registers->A - c - n;
-    ctx->registers->A = sum;
-
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sum == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+
+    const int sub =  ctx->registers->A - ctx->registers->CARRY_FLAG - n;
+    ctx->registers->A = sub;
+
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
+    
+    return 1; //TODO: CHECK TIMINGS
 }
 
 uint8_t GB_AND_R(EmulationState *ctx)
@@ -686,11 +659,9 @@ uint8_t GB_AND_R(EmulationState *ctx)
     uint8_t and = ctx->registers->A & GB_GetReg8(ctx, r);
     ctx->registers->A = and;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, and == 0);
-
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    
+    ctx->registers->ZERO_FLAG = and == 0;
+    return 1; //TODO: CHECK TIMINGS    
 }
 
 uint8_t GB_AND_N(EmulationState *ctx)
@@ -709,14 +680,12 @@ uint8_t GB_AND_N(EmulationState *ctx)
     uint8_t and = ctx->registers->A & n;
     ctx->registers->A = and;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, and == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 1);
-    GB_SET_F(GB_C_FLAG, 0);
+    ctx->registers->ZERO_FLAG = and == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 1;
+    ctx->registers->CARRY_FLAG = 0;
 
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1;//TODO: CHECK TIMING...
 }
 
 uint8_t GB_AND_HL(EmulationState *ctx)
@@ -735,14 +704,12 @@ uint8_t GB_AND_HL(EmulationState *ctx)
     uint8_t and = ctx->registers->A & data;
     ctx->registers->A = and;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, and == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 1);
-    GB_SET_F(GB_C_FLAG, 0);
+    ctx->registers->ZERO_FLAG = and == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 1;
+    ctx->registers->CARRY_FLAG = 0;
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1;//TODO: CHECK TIMING...
 }
 
 uint8_t GB_XOR_R(EmulationState *ctx)
@@ -762,14 +729,12 @@ uint8_t GB_XOR_R(EmulationState *ctx)
     uint8_t xor = ctx->registers->A ^ GB_GetReg8(ctx, r);
     ctx->registers->A = xor;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, xor == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, 0);
+    ctx->registers->ZERO_FLAG = xor == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = 0;
 
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1; //TODO: CHECK TIMINGS 
 }
 
 uint8_t GB_XOR_N(EmulationState *ctx)
@@ -787,15 +752,13 @@ uint8_t GB_XOR_N(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
     uint8_t xor = ctx->registers->A ^ n;
     ctx->registers->A = xor;
+    
+    ctx->registers->ZERO_FLAG = xor == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = 0;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, xor == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, 0);
-
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1; //TODO: CHECK TIMINGS 
 }
 
 uint8_t GB_XOR_HL(EmulationState *ctx)
@@ -814,16 +777,15 @@ uint8_t GB_XOR_HL(EmulationState *ctx)
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
     uint8_t xor = ctx->registers->A ^ data;
     ctx->registers->A = xor;
+   
+    ctx->registers->ZERO_FLAG = xor == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = 0;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, xor == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 1);
-    GB_SET_F(GB_C_FLAG, 0);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1; //TODO: CHECK TIMINGS    
 }
+
 uint8_t GB_OR_R(EmulationState *ctx)
 {
     // encoding: 0b10110xxx
@@ -839,16 +801,15 @@ uint8_t GB_OR_R(EmulationState *ctx)
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
     uint8_t or = ctx->registers->A | GB_GetReg8(ctx, r);
     ctx->registers->A = or;
+    
+    ctx->registers->ZERO_FLAG = or == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = 0;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, or == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, 0);
-
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1; //TODO: CHECK TIMINGS
 }
+
 uint8_t GB_OR_N(EmulationState *ctx)
 {
     // encoding: 0b11110110
@@ -865,15 +826,14 @@ uint8_t GB_OR_N(EmulationState *ctx)
     uint8_t or = ctx->registers->A | n;
     ctx->registers->A = or;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, or == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, 0);
+    ctx->registers->ZERO_FLAG = or == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = 0;
 
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1; //TODO: CHECK TIMINGS
 }
+
 uint8_t GB_OR_HL(EmulationState *ctx)
 {
     // encoding: 0b10110110
@@ -889,15 +849,14 @@ uint8_t GB_OR_HL(EmulationState *ctx)
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
     uint8_t or = ctx->registers->A | data;
     ctx->registers->A = or;
-
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, or == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, 0);
+    
+    ctx->registers->ZERO_FLAG = or == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = 0;
     
     //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    return 1;//TODO: CHECK TIMINGS
 }
 
 uint8_t GB_CP_R(EmulationState *ctx)
@@ -913,14 +872,12 @@ uint8_t GB_CP_R(EmulationState *ctx)
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
     const uint8_t sub =  ctx->registers->A - GB_GetReg8(ctx, r);
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sub == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, sub >> 3 == 0x01);
-    GB_SET_F(GB_C_FLAG, sub >> 7 == 0x01);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1; 
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;  
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
+
+    return 1; //TODO: CHECK TIMING!
 }
 
 uint8_t GB_CP_N(EmulationState *ctx)
@@ -938,14 +895,12 @@ uint8_t GB_CP_N(EmulationState *ctx)
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
     const uint8_t sub =  ctx->registers->A - n;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sub == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, sub >> 3 == 0x01);
-    GB_SET_F(GB_C_FLAG, sub >> 7 == 0x01);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = sub > 0x0F;
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
+
+    return 1; //TODO: CHECK TIMINGS
 }
 
 uint8_t GB_CP_HL(EmulationState *ctx)
@@ -959,17 +914,15 @@ uint8_t GB_CP_HL(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
         flags.C = 1 if carry_per_bit[7] else 0
     */
+
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
     const uint8_t sub =  ctx->registers->A - data;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, sub == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, sub >> 3 == 0x01);
-    GB_SET_F(GB_C_FLAG, sub >> 7 == 0x01);
+    ctx->registers->ZERO_FLAG = sub == 0;
+    ctx->registers->N_FLAG = 1; 
+    ctx->registers->H_CARRY_FLAG = sub >0x0F;  
+    ctx->registers->CARRY_FLAG = sub > 0xFF;
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -987,14 +940,11 @@ uint8_t GB_INC_R(EmulationState *ctx)
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x38) >> 3;
     result = GB_GetReg8(ctx, r);
     GB_SetReg8(ctx, r, ++result);
-
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, result == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, result >> 3 == 0x01);
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = result == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = result > 0x0F;
+    
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1011,17 +961,14 @@ uint8_t GB_INC_HL(EmulationState *ctx)
     */
     uint8_t result = 0;
     const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    
     result = data + 1; 
+
     GB_BusWrite(ctx, ctx->registers->HL, result);
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, result == 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, result >> 3 == 0x01);
+    ctx->registers->ZERO_FLAG = result == 0;
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = result > 0x0F;
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1035,20 +982,16 @@ uint8_t GB_DEC_R(EmulationState *ctx)
         flags.N = 1
         flags.H = 1 if carry_per_bit[3] else 0
     */
-    uint8_t result = 0;
+    uint16_t result = 0;
     const uint8_t r = (ctx->registers->INSTRUCTION & 0x38) >> 3;
-    result = GB_GetReg8(ctx, r);
-    GB_SetReg8(ctx, r, --result);
+    result = GB_GetReg8(ctx, r) - 1;
+    GB_SetReg8(ctx, r, result & 0xFF);
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, result == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, result >> 3 == 0x01);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = result == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = result > 0x0F;
+        
     return 1; // TODO: CHECK  TIMING...
-
 }
 
 uint8_t GB_DEC_HL(EmulationState *ctx)
@@ -1068,13 +1011,10 @@ uint8_t GB_DEC_HL(EmulationState *ctx)
     result = data - 1; 
     GB_BusWrite(ctx, ctx->registers->HL, result);
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, result == 0);
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, result >> 3 == 0x01);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = result == 0;
+    ctx->registers->N_FLAG = 1;
+    ctx->registers->H_CARRY_FLAG = result > 0x0F;
+        
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1098,12 +1038,9 @@ uint8_t GB_CPL(EmulationState *ctx)
     uint8_t A = ctx->registers->A;
     ctx->registers->A = ~A;
 
-    GB_TMP_F();
-    GB_SET_F(GB_N_FLAG, 1);
-    GB_SET_F(GB_H_FLAG, 1);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->N_FLAG = 1; 
+    ctx->registers->H_CARRY_FLAG = 1; 
+
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1133,11 +1070,8 @@ uint8_t GB_ADD_HL_RR(EmulationState *ctx)
     ctx->registers->HL = result & 0xFFFF;
     
     // Set the flags
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, ((ctx->registers->HL & 0xFFF) + (rr_value & 0xFFF)) > 0xFFF);
-    GB_SET_F(GB_C_FLAG, result > 0xFFFF);
+    ctx->registers->H_CARRY_FLAG = result > 0xFFF;
+    ctx->registers->CARRY_FLAG = result > 0xFFFF;
 
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1178,14 +1112,6 @@ uint8_t GB_ADD_SP_DD(EmulationState *ctx)
     const short sum =  ctx->registers->SP + dd; // TODO: VERIFY CONVERSION
     ctx->registers->SP = sum;
     
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG,0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1200,14 +1126,8 @@ uint8_t GB_LD_HL_SP_PLUS_DD(EmulationState *ctx)
     const short sum =  ctx->registers->SP + dd; //TODO: check conversion
     ctx->registers->HL = sum;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG,0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, (sum  > 0x0F));
-    GB_SET_F(GB_C_FLAG, sum > 0xFF);
-    
     //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1218,18 +1138,10 @@ uint8_t GB_RLCA(EmulationState *ctx)
     /*
         rotate A left trough carry
     */   
-   const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-   uint8_t shifted = ctx->registers->A << 1 << c;
+   uint16_t shifted = ctx->registers->A << 1 <<  ctx->registers->CARRY_FLAG;
    ctx->registers->A = shifted;
-   
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, shifted >> 7 == 0x01);
+
     
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1240,17 +1152,13 @@ uint8_t GB_RLA(EmulationState *ctx)
         rotate A left
     */
 
-   uint8_t shifted = ctx->registers->A << 1;
+   uint16_t shifted = ctx->registers->A << 1;
    ctx->registers->A = shifted;
    
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, shifted >> 7 == 0x01);
-    
-    //Used to set F reg 
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = shifted > 0xFF;
+
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1260,18 +1168,14 @@ uint8_t GB_RRCA(EmulationState *ctx)
     /*
         rotate right A through carry
     */
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-    uint8_t shifted = ctx->registers->A >> 1 >> c;
+    
+    uint16_t shifted = ctx->registers->A >> 1 >> ctx->registers->CARRY_FLAG;
     ctx->registers->A = shifted;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, shifted >> 7 == 0x01);
-
-    // Used to set F reg
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = shifted > 0xFF;
+    
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1281,17 +1185,15 @@ uint8_t GB_RRA(EmulationState *ctx)
     /*
         rotate A right
     */
-    uint8_t shifted = ctx->registers->A >> 1;
+    uint16_t shifted = ctx->registers->A >> 1;
     ctx->registers->A = shifted;
 
-    GB_TMP_F();
-    GB_SET_F(GB_ZERO_FLAG, 0);
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, shifted >> 7 == 0x01);
-
-    // Used to set F reg
-    GB_F_OR_AF(ctx, tmpRegF);
+    
+    ctx->registers->ZERO_FLAG = 0;
+    ctx->registers->ZERO_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = shifted > 0xFF;
+    
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1314,9 +1216,27 @@ uint8_t GB_RL_R(EmulationState *ctx)
 {
     // encoding: CB 1x
     /*
-        rotate left through carry r
+        ┌────────────────────┐
+        │ ┌──┐  ┌─────────┐  │
+        └─│CY│<─│7<──────0│<─┘
+          └──┘  └─────────┘
+                    r
     */
     MNE_Log("[GB_RL_R]\n");
+
+    uint8_t r = ctx->registers->INSTRUCTION & 0x07;
+    uint8_t rValue = GB_GetReg8(ctx, r);
+    uint8_t carryIn = ctx->registers->CARRY_FLAG;
+
+    uint8_t carryOut = (rValue & 0x80) >> 7;
+    rValue = (rValue << 1) | carryIn;       
+
+    ctx->registers->CARRY_FLAG = carryOut;
+    GB_SetReg8(ctx, r, rValue);
+
+    ctx->registers->ZERO_FLAG = rValue == 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->N_FLAG = 0;
 
    return 1; // TODO: CHECK  TIMING...
 }
@@ -1327,7 +1247,7 @@ uint8_t GB_RRC_R(EmulationState *ctx)
     /*
         rotate right r
     */
-    MNE_Log("[GB_RRC_R]\n");
+    MNE_Log("[GB_RRC_R][NOT IMPLEMENTED]\n");
 
    return 1; // TODO: CHECK  TIMING...
 }
@@ -1406,11 +1326,8 @@ uint8_t GB_CB_BIT_N_R(EmulationState *ctx)
     uint8_t b3 = ctx->registers->INSTRUCTION & 0x38 >> 3;
     uint8_t bitTest = ((GB_GetReg8(ctx, r8) >> b3) & 0x01) == 0x00;
 
-    GB_TMP_F();
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG,  bitTest > 0x0F);
-    GB_SET_F(GB_ZERO_FLAG, bitTest);
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->ZERO_FLAG = bitTest;
+    ctx->registers->CARRY_FLAG = bitTest > 0x0F;    
 
    return 1; // TODO: CHECK  TIMING...
 }   
@@ -1458,15 +1375,9 @@ uint8_t GB_CCF(EmulationState *ctx)
         flags.H = 0
         flags.C = ~flags.C
     */
-    const uint8_t c = GB_TEST_F(ctx, GB_C_FLAG);
-
-    GB_TMP_F();
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, c);
-
-    // Used to set F reg
-    GB_F_OR_AF(ctx, tmpRegF);
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = ~ctx->registers->CARRY_FLAG;     
 
     return 1;
 }
@@ -1479,13 +1390,10 @@ uint8_t GB_SCF(EmulationState *ctx)
         flags.H = 0
         flags.C = 1
     */
-    GB_TMP_F();
-    GB_SET_F(GB_N_FLAG, 0);
-    GB_SET_F(GB_H_FLAG, 0);
-    GB_SET_F(GB_C_FLAG, 1);
-
-    // Used to set F reg
-    GB_F_OR_AF(ctx, tmpRegF);
+    
+    ctx->registers->N_FLAG = 0;
+    ctx->registers->H_CARRY_FLAG = 0;
+    ctx->registers->CARRY_FLAG = 1;   
 
    return 1;
 }
@@ -1629,10 +1537,10 @@ uint8_t GB_JR_CC_E(EmulationState *ctx)
     */
 
     const uint8_t cc = (ctx->registers->INSTRUCTION & 0x18) >> 3;
+    const int8_t nn_signed = GB_BusRead(ctx, ctx->registers->PC++);
 
     if (GB_ResolveCondition(ctx, cc))
     {
-        const int8_t nn_signed = GB_BusRead(ctx, ctx->registers->PC++);
         ctx->registers->PC += nn_signed;
         return 3;
     }
@@ -1819,7 +1727,7 @@ uint8_t GB_CB_PREFIX(EmulationState *ctx)
         srl r8       0  0  1  1  1      Operand (r8) | MASK:0xF8, BASE-OP: 0x38
 
     */
-
+    
     if ((cbInstr & 0xC0) != 0x00)
     {
         uint8_t masked = cbInstr & 0xC0;
@@ -1883,13 +1791,13 @@ uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc)
     switch (cc)
     {
     case COND_NZ:
-        return !GB_TEST_F(ctx, GB_ZERO_FLAG);
+        return !ctx->registers->ZERO_FLAG;
     case COND_Z:
-        return GB_TEST_F(ctx, GB_ZERO_FLAG);
+        return ctx->registers->ZERO_FLAG;
     case COND_NC:
-        return !GB_TEST_F(ctx, GB_C_FLAG);
+        return !ctx->registers->CARRY_FLAG;
     case COND_C:
-        return GB_TEST_F(ctx, GB_C_FLAG);
+        return ctx->registers->CARRY_FLAG;
 
     default:
         MNE_Log("Cannot resolve CC condition(unknow value)");

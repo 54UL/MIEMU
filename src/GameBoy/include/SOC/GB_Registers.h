@@ -23,11 +23,9 @@
 //TODO: WHEN WIDELY USED CHECK PERFORMANCE REPLACING FOR A FUNCTION...
 //TODO: REFACTORIZE  AND REMOVE USELESS SHIT: like the tmpRegF fuckery (FOR FUCKING REAL)
 #define GB_U8_TO_U16(LSB, MSB) (uint16_t)(lsb | (msb << 8))
-#define GB_F_OR_AF(CTX, F_TMP) CTX->registers->F |= (F_TMP & 0xFF)
-#define GB_A_OR_AF(CTX, A) CTX->registers->F |= ((A << 8) & 0XFF00)
-#define GB_TMP_F() uint8_t tmpRegF = 0x00
-#define GB_SET_F(FLAG, VALUE) tmpRegF |= ((VALUE) << FLAG)
-#define GB_TEST_F(CTX, FLAG) ((CTX->registers->F >> FLAG) & 0X01)
+
+// #define GB_SET_F(DATA, FLAG, VALUE) DATA |= ((VALUE) << FLAG)
+// #define GB_TEST_F(DATA, CTX, FLAG) ((DATA>> FLAG) & 0X01)
 
 typedef struct 
 {
@@ -40,7 +38,18 @@ typedef struct
             uint8_t H;
             uint8_t L;
             uint8_t A;
-            uint8_t F;
+
+            union
+            {
+                struct
+                {
+                    uint8_t ZERO_FLAG : GB_ZERO_FLAG;
+                    uint8_t N_FLAG : GB_N_FLAG;
+                    uint8_t H_CARRY_FLAG : GB_H_FLAG;
+                    uint8_t CARRY_FLAG : GB_C_FLAG;
+                };
+                uint8_t F;
+            };
         };
         struct {
             uint16_t BC;

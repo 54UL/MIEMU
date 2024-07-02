@@ -83,7 +83,8 @@ void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, c
     emulationCtx->registers->PC = 0;
 
     // Process instructions...
-    for (int i = 0; i < programLength; i++)
+    // Iterations != program lenght so, for the  moment im iterating the emulation 256 steps to avoid loop steps locks
+    for (int i = 0; i < 0xFF; i++)
     {
         // Step emulation (if clock cycles == 0 is an error)
         if (emulator->TickEmulation() == 0) 
@@ -230,6 +231,7 @@ void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulati
     RunProgram(emulator, emulationCtx, subInstruction, sizeof(subInstruction));
     EXPECT_TRUE(emulationCtx->registers->A == 0x00) << "SUB A, A";
 
+    emulationCtx->registers->CARRY_FLAG = 1; // force overflow...
     RunProgram(emulator, emulationCtx, sbcInstruction, sizeof(sbcInstruction));
     EXPECT_TRUE(emulationCtx->registers->A == 0xFF) << "SBC A, A";
 
@@ -243,9 +245,8 @@ void CPU_ALU_Tests_8bit(const Emulation *emulator, const EmulationState *emulati
     EXPECT_TRUE(emulationCtx->registers->A == testValue) << "OR A, A";
 
     RunProgram(emulator, emulationCtx, cpInstruction, sizeof(cpInstruction));
-    const uint8_t zero = GB_TEST_F(emulationCtx, GB_ZERO_FLAG);
 
-    EXPECT_TRUE(zero) << "CP A, A";
+    EXPECT_TRUE(emulationCtx->registers->ZERO_FLAG) << "CP A, A";
 }
 
 void CPU_ALU_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx)

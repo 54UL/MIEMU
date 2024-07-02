@@ -121,21 +121,18 @@ uint8_t GB_Initialize(int argc, const char ** argv)
     MNE_New(s_systemContext->memory, GB_MEMORY_SIZE, uint8_t);
 
     // Default memory values on power on/reset 
+    // ONLY FOR TESTS, BIOS SHOULD CONFIGURE  ALL REGISTERS...
 
-    // TODO: WHEN READING FROMN CARTIGES UNCOMMENT THE LINE BELOW
-    // s_systemContext->registers->PC = 0X0100; 
+    // s_systemContext->registers->SP = 0xFFFE;
+    // s_systemContext->memory[GB_IE_REGISTER] = 0x00;
+    // s_systemContext->memory[GB_IF_REGISTER] = 0xE0;
 
-    s_systemContext->registers->SP = 0xFFFE;
-    
-    s_systemContext->memory[GB_IE_REGISTER] = 0x00;
-    s_systemContext->memory[GB_IF_REGISTER] = 0xE0;
+    // s_systemContext->memory[GB_LCDC_REGISTER] = 0x91;
+    // s_systemContext->memory[GB_STAT_REGISTER] = 0x81;
 
-    s_systemContext->memory[GB_LCDC_REGISTER] = 0x91;
-    s_systemContext->memory[GB_STAT_REGISTER] = 0x81;
-
-    s_systemContext->memory[GB_BGP_REGISTER] = 0xFC;
-    s_systemContext->memory[GB_OBP0_REGISTER] = 0XFF;
-    s_systemContext->memory[GB_OBP1_REGISTER] = 0XFF;
+    // s_systemContext->memory[GB_BGP_REGISTER] = 0xFC;
+    // s_systemContext->memory[GB_OBP0_REGISTER] = 0XFF;
+    // s_systemContext->memory[GB_OBP1_REGISTER] = 0XFF;
 
     // s_systemContext->IF = 0x00;
     return 0;
@@ -277,13 +274,13 @@ int GB_TickEmulation()
             return 1;
         }
 #ifdef GB_DEBUG
-        MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC);
-/* PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
-            MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
-                    s_systemContext->registers->A, s_systemContext->registers->F, s_systemContext->registers->B, s_systemContext->registers->C,
-                    s_systemContext->registers->D, s_systemContext->registers->E, s_systemContext->registers->H, s_systemContext->registers->L,
-                    s_systemContext->registers->PC, s_systemContext->registers->SP);
-*/
+        MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC - 1);
+//  PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
+        // MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
+        //         s_systemContext->registers->A, s_systemContext->registers->F, s_systemContext->registers->B, s_systemContext->registers->C,
+        //         s_systemContext->registers->D, s_systemContext->registers->E, s_systemContext->registers->H, s_systemContext->registers->L,
+        //         s_systemContext->registers->PC, s_systemContext->registers->SP);
+
 #endif
         s_systemContext->registers->INSTRUCTION = instr;
         clockCycles = fetchedInstruction->handler(s_systemContext);

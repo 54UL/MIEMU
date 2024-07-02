@@ -1,6 +1,6 @@
-#include <CPU/GB_Instructions.h>
-#include <CPU/GB_Bus.h>
-#include <CPU/GB_Registers.h>
+#include <SOC/GB_Instructions.h>
+#include <SOC/GB_Bus.h>
+#include <SOC/GB_Registers.h>
 #include <minemu/MNE_Log.h>
 
 /*INSTRUCTIONS TODOS:

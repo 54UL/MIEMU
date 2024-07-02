@@ -1,4 +1,4 @@
-#include <CPU/GB_Bus.h>
+#include <SOC/GB_Bus.h>
 #include <minemu/MNE_Log.h>
 
 /* GB_Bus.c TODOS

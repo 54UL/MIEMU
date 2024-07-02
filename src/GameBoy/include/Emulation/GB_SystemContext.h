@@ -2,7 +2,7 @@
 #define GB_SYSTEM_CONTEXT_H
 
 #include <stdint.h>
-#include <CPU/GB_Registers.h>
+#include <SOC/GB_Registers.h>
 #include <Memory/GB_Header.h>
 
 #define GB_MEMORY_SIZE 0xFFFF

@@ -65,7 +65,7 @@ void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, c
 {
     MNE_Log("\n--------------PROGRAM START------------------\n");
     const uint8_t maxProgramSize = 0xFF;
-
+    
     // Copy program into memory
     for (int i = 0; i < maxProgramSize; i++)
     {
@@ -187,7 +187,7 @@ void CPU_Jumps_Tests(const Emulation *emulator, const EmulationState *emulationC
     EXPECT_TRUE(emulationCtx->registers->PC == 0x0020) << "Call instruction";
 
     // TODO: to test this instructions is requiered to modify run program function to preserve pc state and program runnin from the current pc position
-
+    
     // RunProgram(emulator, emulationCtx, returnInstruction, sizeof(returnInstruction));
     // EXPECT_TRUE(emulationCtx->registers->PC == 0x0013) << "Return instruction";
     // Conditional call and return instructions

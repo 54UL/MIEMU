@@ -1,7 +1,7 @@
 #include <Emulation/GB_Emulation.h>
 #include <Emulation/GB_Instruction.h>
 
-#include <CPU/GB_Instructions.h>
+#include <SOC/GB_Instructions.h>
 #include <Memory/GB_MemoryMap.h>
 
 #include <string.h>

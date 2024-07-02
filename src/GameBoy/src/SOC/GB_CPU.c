@@ -1,4 +1,4 @@
-#include <SOC/GB_Instructions.h>
+#include <SOC/GB_CPU.h>
 #include <SOC/GB_Bus.h>
 #include <SOC/GB_Registers.h>
 #include <minemu/MNE_Log.h>
@@ -1894,5 +1894,6 @@ uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc)
     default:
         MNE_Log("Cannot resolve CC condition(unknow value)");
     }
+    
     return 0;
 }

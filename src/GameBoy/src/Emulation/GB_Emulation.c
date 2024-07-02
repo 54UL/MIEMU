@@ -1,7 +1,7 @@
 #include <Emulation/GB_Emulation.h>
 #include <Emulation/GB_Instruction.h>
 
-#include <SOC/GB_Instructions.h>
+#include <SOC/GB_CPU.h>
 #include <Memory/GB_MemoryMap.h>
 
 #include <string.h>
@@ -9,13 +9,6 @@
 
 static EmulationState * s_systemContext;
 static uint32_t s_instructionLenght = 0;
-
-/*
-    TO IMPLEMENT:
-    GB PREFIX 7C
-    GB PREFIX 11
-    JUMP_INSTRUCTIONS...
-*/
 
 static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
     {

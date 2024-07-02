@@ -5,19 +5,25 @@ message("MINEMU GameBoy")
 # List all the source files of the GameBoy library
 set(GB_HEADERS
     include/GameBoy.h
-    include/SOC/GB_Bus.h
-    include/SOC/GB_Instructions.h
-    include/SOC/GB_Registers.h
     include/Emulation/GB_Emulation.h
     include/Emulation/GB_Instruction.h
     include/Emulation/GB_SystemContext.h
     include/Memory/GB_MemoryMap.h
     include/Memory/GB_Header.h
     include/PPU/GB_Pallete.h
+    include/SOC/GB_Bus.h
+    include/SOC/GB_CPU.h
+    include/SOC/GB_Registers.h
+    include/SOC/GB_CPU.h
+    include/SOC/GB_Interrupt.h
+    include/SOC/GB_OAM.h
+    include/SOC/GB_Port1.h
+    include/SOC/GB_Ram.h
+    include/SOC/GB_Timer.h
 )
 
 set(GB_SOURCES
-    src/SOC/GB_Instructions.c
+    src/SOC/GB_CPU.c
     src/SOC/GB_Bus.c
     src/Emulation/GB_Emulation.c
 )

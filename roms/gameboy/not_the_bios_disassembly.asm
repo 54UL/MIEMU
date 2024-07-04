@@ -1,4 +1,6 @@
 ; author: https://gist.github.com/drhelius/6063288
+
+	; INIT_RAM 
 	LD SP,$fffe		; $0000  Setup Stack
 
 	XOR A			; $0003  Zero the memory from $8000-$9FFF (VRAM)
@@ -6,8 +8,9 @@
 Addr_0007:
 	LD (HL-),A		; $0007
 	BIT 7,H		; $0008
-	JR NZ, Addr_0007	; $000a
+	JR NZ, Addr_0007	; $000a - INIT_RAM END
 
+	; INIT_SOUND
 	LD HL,$ff26		; $000c  Setup Audio
 	LD C,$11		; $000f
 	LD A,$80		; $0011 
@@ -19,7 +22,9 @@ Addr_0007:
 	LD (HL-),A		; $0019
 	LD A,$77		; $001a
 	LD (HL),A		; $001c
-
+	; INIT_SOUND END
+	
+	; SET_UP_LOGO
 	LD A,$fc		; $001d  Setup BG palette
 	LD ($FF00+$47),A	; $001f
 
@@ -90,6 +95,9 @@ Addr_0064:
 	LD E,$c1		; $007a
 	CP $64		; $007c
 	JR NZ, Addr_0086	; $007e  $64 counts in, play sound #2
+	; SET_UP_LOGO END
+
+	; SCROLL_LOGO
 Addr_0080:
 	LD A,E		; $0080  play sound
 	LD ($FF00+C),A	; $0081
@@ -102,14 +110,14 @@ Addr_0086:
 	LD ($FF00+$42),A	; $0089  scroll logo up if B=1
 	DEC D			; $008b  
 	JR NZ, Addr_0060	; $008c
-
 	DEC B			; $008e  set B=0 first time
 	JR NZ, Addr_00E0	; $008f    ... next time, cause jump to "Nintendo Logo check"
-
 	LD D,$20		; $0091  use scrolling loop to pause
 	JR Addr_0060	; $0093
+	; SCROLL_LOGO END
 
-	; ==== Graphic routine ====
+
+	; DECODE_LOGO
 
 	LD C,A		; $0095  "Double up" all the bits of the graphics data
 	LD B,$04		; $0096     and store in Video RAM
@@ -127,6 +135,7 @@ Addr_0098:
 	LD (HL+),A		; $00a5
 	INC HL		; $00a6
 	RET			; $00a7
+	; DECODE_LOGO END
 
 Addr_00A8:
 	;Nintendo Logo
@@ -138,8 +147,7 @@ Addr_00D8:
 	;More video data
 	.DB $3C,$42,$B9,$A5,$B9,$A5,$42,$3C
 
-	; ===== Nintendo logo comparison routine =====
-
+	; COMPARE_LOGO
 Addr_00E0:	
 	LD HL,$0104		; $00e0	; point HL to Nintendo logo in cart
 	LD DE,$00a8		; $00e3	; point DE to Nintendo logo in DMG rom
@@ -153,7 +161,9 @@ Addr_00E6:
 	LD A,L		; $00ec
 	CP $34		; $00ed	;do this for $30 bytes
 	JR NZ, Addr_00E6	; $00ef
+	; COMPARE_LOGO END
 
+	; CHECKSUM_HEADER
 	LD B,$19		; $00f1
 	LD A,B		; $00f3
 Addr_00F4:
@@ -164,6 +174,7 @@ Addr_00F4:
 	ADD (HL)		; $00f9
 	JR NZ,$fe		; $00fa	; if $19 + bytes from $0134-$014D  don't add to $00
 						;  ... lock up
+	; CHECKSUM_HEADER END
 
 	LD A,$01		; $00fc
 	LD ($FF00+$50),A	; $00fe	;turn off DMG rom

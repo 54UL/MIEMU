@@ -20,6 +20,7 @@ set(GB_HEADERS
     include/SOC/GB_Port1.h
     include/SOC/GB_Ram.h
     include/SOC/GB_Timer.h
+    include/SOC/GB_Opcodes.h
 )
 
 set(GB_SOURCES

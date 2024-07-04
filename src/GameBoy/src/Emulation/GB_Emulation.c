@@ -2,6 +2,8 @@
 #include <Emulation/GB_Instruction.h>
 
 #include <SOC/GB_CPU.h>
+#include <SOC/GB_Opcodes.h>
+
 #include <Memory/GB_MemoryMap.h>
 
 #include <string.h>
@@ -274,8 +276,10 @@ int GB_TickEmulation()
             return 1;
         }
 #ifdef GB_DEBUG
-        MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC - 1);
-//  PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
+        // MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC - 1);
+        MNE_Log("%-32s PC:[0x%02X]\n", gb_opcodes_names[instr], s_systemContext->registers->PC - 1);
+
+        //  PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
         // MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
         //         s_systemContext->registers->A, s_systemContext->registers->F, s_systemContext->registers->B, s_systemContext->registers->C,
         //         s_systemContext->registers->D, s_systemContext->registers->E, s_systemContext->registers->H, s_systemContext->registers->L,

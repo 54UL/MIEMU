@@ -351,7 +351,7 @@ void GB_RenderTile(uint32_t* pixels, const uint8_t* tile, const uint16_t x, cons
 }
 
 // TODO: THIS FUNCTION ONLY DOES MINIMAL TILE RENDERING AND IS A TEST... (LCD CONTROLLER GOES HERE ALONG WITH THE PPU.. PROCESING)
-GB_OnRender(uint32_t * pixels, const int64_t w, const int64_t h)
+void GB_OnRender(uint32_t * pixels, const int64_t w, const int64_t h)
 {
     // provided by pan-docs game boy documentation :3
     const uint8_t gameboy_tile[] = {0x3C, 0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0x5E, 0x7E, 0x0A, 0x7C, 0x56, 0x38, 0x7C};

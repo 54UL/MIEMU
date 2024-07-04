@@ -34,6 +34,7 @@ void GB_SetReg8(EmulationState *ctx, uint8_t r, uint8_t value)
 
     ctx->registers->FILE_8[r] = value;
 }
+
 uint8_t GB_GetReg8(EmulationState *ctx, uint8_t r)
 {
     if (r == GB_HL_INDIRECT_OFFSET)

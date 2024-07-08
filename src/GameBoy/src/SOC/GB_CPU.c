@@ -1,6 +1,8 @@
 #include <SOC/GB_CPU.h>
 #include <SOC/GB_Bus.h>
 #include <SOC/GB_Registers.h>
+#include <SOC/GB_Opcodes.h>
+
 #include <minemu/MNE_Log.h>
 
 /*INSTRUCTIONS TODOS:
@@ -900,11 +902,12 @@ uint8_t GB_CP_N(EmulationState *ctx)
     */
 
     const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t sub =  ctx->registers->A - n;
+    const uint8_t a = ctx->registers->A;
+    const uint8_t sub =  a - n;
 
     ctx->registers->ZERO_FLAG = sub == 0;
     ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((ctx->registers->A & 0xf) - (n & 0xf)) < 0;
+    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (n & 0xf)) < 0;
     ctx->registers->CARRY_FLAG = ctx->registers->A < n;
 
     return 1; //TODO: CHECK TIMINGS
@@ -1697,7 +1700,8 @@ uint8_t GB_RST_N(EmulationState *ctx)
 uint8_t GB_CB_PREFIX(EmulationState *ctx)
 {
     const uint8_t cbInstr = ctx->memory[ctx->registers->PC++];
-    MNE_Log("CB PREFIX OPCODE: [%02X] ", cbInstr);
+    MNE_Log("%-32s PC:[0x%02X] CB_PREFIX_HANDLER: ", opcode_cb_names[cbInstr], ctx->registers->PC - 1);
+
     ctx->registers->INSTRUCTION = cbInstr;
 
     /*

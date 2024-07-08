@@ -16,7 +16,7 @@ typedef struct {
 } GameBoyInstruction;
 
 #ifdef GB_DEBUG
-#define GB_INSTRUCTION(mask, opcode, handler)  {mask, opcode, (instructionFnPtrGb)handler, ""#handler" [MASK:"#mask"] [CODE:"#opcode"] [CURRENT:%04X] [PC:%04X]\n"}
+#define GB_INSTRUCTION(mask, opcode, handler)  {mask, opcode, (instructionFnPtrGb)handler, ""#handler" [MASK:"#mask"] [CODE:"#opcode"]"}
 #else
 #define GB_INSTRUCTION(mask, opcode, handler)  {mask, opcode, (instructionFnPtrGb)handler}
 #endif

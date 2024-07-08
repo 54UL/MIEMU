@@ -276,8 +276,9 @@ int GB_TickEmulation()
             return 1;
         }
 #ifdef GB_DEBUG
-        // MNE_Log(fetchedInstruction->handlerName, instr, s_systemContext->registers->PC - 1);
-        MNE_Log("%-32s PC:[0x%02X]\n", gb_opcodes_names[instr], s_systemContext->registers->PC - 1);
+        if (instr != 0xCB) {
+            MNE_Log("%-32s PC:[0x%02X] HANDLER: %s\n", gb_opcodes_names[instr], s_systemContext->registers->PC - 1, fetchedInstruction->handlerName);
+        }
 
         //  PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
         // MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
@@ -292,7 +293,7 @@ int GB_TickEmulation()
         return clockCycles;
     }
     else
-    {
+    {        
         s_systemContext->registers->INSTRUCTION = GB_INVALID_INSTRUCTION; // Invalidate last instruction entry
         s_systemContext->memory[GB_HALT_REGISTER] = 0x01; // TODO: IT MAY B NEEDED USING BUS WRITE TO TRIGGER REGISTER BEHEAVIOURS
 

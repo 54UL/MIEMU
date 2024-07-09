@@ -10,11 +10,11 @@ set(GB_HEADERS
     include/Emulation/GB_SystemContext.h
     include/Memory/GB_MemoryMap.h
     include/Memory/GB_Header.h
+    include/SOC/GB_Registers.h
     include/PPU/GB_Pallete.h
     include/SOC/GB_Bus.h
     include/SOC/GB_CPU.h
-    include/SOC/GB_Registers.h
-    include/SOC/GB_CPU.h
+    include/SOC/GB_LCD.h
     include/SOC/GB_Interrupt.h
     include/SOC/GB_OAM.h
     include/SOC/GB_Port1.h
@@ -26,6 +26,7 @@ set(GB_HEADERS
 set(GB_SOURCES
     src/SOC/GB_CPU.c
     src/SOC/GB_Bus.c
+    src/SOC/GB_LCD.c
     src/Emulation/GB_Emulation.c
 )
 

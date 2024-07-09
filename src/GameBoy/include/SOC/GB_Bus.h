@@ -7,6 +7,8 @@
 #define REG16_MODE_SP 1
 #define REG16_MODE_HL_PLUS_HL_MINUS 2
 
+//TODO: IMPROVE THIS METHOD....
+uint8_t GB_InAddressRange(const uint16_t a, const uint16_t b, const uint16_t addrr);
 uint8_t GB_BusRead(EmulationState *ctx, uint16_t address);
 void GB_BusWrite(EmulationState *ctx, uint16_t address, uint8_t value);
 

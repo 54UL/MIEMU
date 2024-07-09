@@ -65,4 +65,101 @@ typedef struct
     uint16_t INSTRUCTION;
 } GB_Registers;
 
+// ---------------------------- USED
+#define GB_IE_REGISTER 0xFFFE
+#define GB_IF_REGISTER 0xFF0F
+
+// LCD
+#define GB_LCDC_REGISTER 0xFF40 // (LCD Control Register)
+#define GB_STAT_REGISTER 0xFF41 // (LCDC Status Register)
+
+#define GB_SCY_REGISTER 0xFF42  // (Scroll Y)
+#define GB_SCX_REGISTER 0xFF43  // (Scroll X)
+#define GB_LY_REGISTER 0xFF44   // (LCDC Y-Coordinate)
+#define GB_LYC_REGISTER 0xFF45  // (LY Compare)
+#define GB_DMA_REGISTER 0xFF46  // (Direct Memory Access)
+#define GB_BGP_REGISTER 0xFF47  // (Background Palette Data)
+#define GB_OBP0_REGISTER 0xFF48 // (Object Palette 0 Data)
+#define GB_OBP1_REGISTER 0xFF49 // (Object Palette 1 Data)
+#define GB_WY_REGISTER 0xFF4A   // (Window Y Position)
+#define GB_WX_REGISTER 0xFF4B   // (Window X Position - 7)
+
+// ---------------------------- NOT USED
+#define GB_HALT_REGISTER 0xFF50
+
+
+
+// ---------------------------- Hardware registers structs
+
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            uint8_t IF_VBLANK  : 1;
+            uint8_t IF_LCD     : 1;
+            uint8_t IF_TIMER   : 1;
+            uint8_t IF_SERIAL  : 1;
+            uint8_t IF_JOYPAD  : 1;
+        };
+        uint8_t value; // Access entire register
+    };
+} GB_IF_register;
+
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            uint8_t IE_VBLANK  : 1;
+            uint8_t IE_LCD     : 1;
+            uint8_t IE_TIMER   : 1;
+            uint8_t IE_SERIAL  : 1;
+            uint8_t IE_JOYPAD  : 1;
+        };
+        uint8_t IE_reg; // Access entire register
+    };
+} GB_IE_register;
+
+// GB_LCDC_REGISTER (LCD Control Register)
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            uint8_t LCD_DISPLAY_ENABLE : 1;
+            uint8_t WINDOW_TILE_MAP_SELECT : 1;
+            uint8_t WINDOW_DISPLAY_ENABLE : 1;
+            uint8_t BG_WINDOW_TILE_DATA_SELECT : 1;
+            uint8_t BG_TILE_MAP_SELECT : 1;
+            uint8_t OBJ_SIZE : 1;
+            uint8_t OBJ_DISPLAY_ENABLE : 1;
+            uint8_t BG_WINDOW_DISPLAY_PRIORITY : 1;
+        };
+        uint8_t value; // Access entire register
+    };
+} GB_LCDC_Register;
+
+// GB_STAT_REGISTER
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            uint8_t LYC_LY_COINCIDENCE_INTERRUPT : 1;
+            uint8_t MODE_2_OAM_INTERRUPT : 1;
+            uint8_t MODE_1_VBLANK_INTERRUPT : 1;
+            uint8_t MODE_0_HBLANK_INTERRUPT : 1;
+            uint8_t LYC_LY_COINCIDENCE_FLAG : 1;
+            uint8_t MODE_FLAG : 2;
+            uint8_t COINCIDENCE_FLAG : 1;
+        };
+        uint8_t value; // Access entire register
+    };
+} GB_STAT_Register;
+
 #endif

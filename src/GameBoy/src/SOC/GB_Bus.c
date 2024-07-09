@@ -2,10 +2,28 @@
 #include <minemu/MNE_Log.h>
 
 /* GB_Bus.c TODOS
-- IMPLEMENT HARDWARE REGISTER HASH LIST TO CHECK ACCESS POLICY (R, R/W,TRIGGER ON W, ETC)
 - IMPLEMENT HARDWARE REGISTERS.... LOL
 - MEMORY ACCESS SHOULD NOT BE MULTI THREADED...
 */
+/*
+from pan-docs:
+
+0000	0x3FFF	//16 KiB ROM bank 00	From cartridge, usually a fixed bank
+4000	0x7FFF	//16 KiB ROM Bank 01–NN	From cartridge, switchable bank via mapper (if any)
+8000	0x9FFF	//8 KiB Video RAM (VRAM)	In CGB mode, switchable bank 0/1
+A000	0xBFFF	//8 KiB External RAM	From cartridge, switchable bank if any
+C000	0xCFFF	//4 KiB Work RAM (WRAM)	
+D000	0xDFFF	//4 KiB Work RAM (WRAM)	In CGB mode, switchable bank 1–7
+E000	0xFDFF	//Echo RAM (mirror of C000–DDFF)	Nintendo says use of this area is prohibited.
+FE00	0xFE9F	//Object attribute memory (OAM)	
+FEA0	0xFEFF	//Not Usable	Nintendo says use of this area is prohibited.
+FF00	0xFF7F	//I/O Registers	
+FF80	0xFFFE	//High RAM (HRAM)	
+FFFF	0xFFFF	//Interrupt Enable register (IE)
+
+*/
+
+
 
 uint8_t GB_BusRead(EmulationState *ctx, uint16_t address)
 {

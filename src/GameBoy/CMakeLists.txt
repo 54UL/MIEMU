@@ -8,7 +8,6 @@ set(GB_HEADERS
     include/Emulation/GB_Emulation.h
     include/Emulation/GB_Instruction.h
     include/Emulation/GB_SystemContext.h
-    include/Memory/GB_MemoryMap.h
     include/Memory/GB_Header.h
     include/SOC/GB_Registers.h
     include/PPU/GB_Pallete.h

@@ -5,13 +5,19 @@
 #include <SOC/GB_Registers.h>
 #include <Memory/GB_Header.h>
 
-#define GB_MEMORY_SIZE 0xFFFF
-
 typedef struct
 {
     // Main memory and cpu regs    
     uint8_t ime;
-    uint8_t         *memory;
+    uint8_t bios_enabled;
+
+    // TODO: MOVE THIS, MEMORY SHOULD BE ACCESED BY BUS READ AND BUS WRITE IF U WANT TO KNOW A SPECIFIC MEMORY REGION...
+    uint8_t         *bios;
+    uint8_t         *bank_00;
+    uint8_t         *vram;
+    uint8_t         *hram;
+
+
     GB_Registers    *registers;
     // Cartige
     GB_Header       *header;

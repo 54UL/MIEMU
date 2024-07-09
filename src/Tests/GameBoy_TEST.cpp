@@ -64,18 +64,18 @@ protected:
 void RunProgram(const Emulation *emulator, const EmulationState *emulationCtx, const uint8_t *programArray, const uint16_t programLength)
 {
     MNE_Log("\n--------------PROGRAM START------------------\n");
-    const uint8_t maxProgramSize = 0xFF;
+    const uint8_t maxProgramSize = 0xFF;// Ok due to bus read and bus write logic, here we assume writting into the bank 00 0xFF bytes of data so no bus mux needed...
     
     // Copy program into memory
     for (int i = 0; i < maxProgramSize; i++)
     {
         if (i < programLength)
         {
-            emulationCtx->memory[i] = programArray[i];
+            emulationCtx->bank_00[i] = programArray[i];
         }
         else
         {
-            emulationCtx->memory[i] = 0;
+            emulationCtx->bank_00[i] = 0;
         }
     }
 
@@ -103,9 +103,8 @@ void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *
 {
     constexpr uint8_t testValue = 0x12;
  
-    constexpr uint8_t loadA[] = {0x3E, testValue}; // LD_R_N
-    constexpr uint8_t copyAToB[] = {0x78}; // LD_R_R
-   
+    constexpr uint8_t loadA[] =       {0x3E, testValue}; // LD_R_N
+    constexpr uint8_t copyAToB[] =    {0x78}; // LD_R_R
     constexpr uint8_t loadAFromHL[] = {0x7E}; // LD A,(HL) - 0x7E
 
     // Run the program loadA
@@ -117,8 +116,8 @@ void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *
     EXPECT_TRUE((emulationCtx->registers->A) == (emulationCtx->registers->BC >> 8)) << ExpectMessage(copyAToB, "B = A");
 
     // Run the program loadAFromHL
-    emulationCtx->memory[0XF000]  = testValue;
-    emulationCtx->registers->HL = 0XF000;
+    GB_BusWrite(emulationCtx, GB_HRAM_START, testValue);
+    emulationCtx->registers->HL = GB_HRAM_START;
 
     RunProgram(emulator, emulationCtx, loadAFromHL, sizeof(loadAFromHL));
     EXPECT_TRUE(emulationCtx->registers->A == testValue) << ExpectMessage(loadAFromHL, "A = (HL)");
@@ -126,19 +125,22 @@ void Load_And_Store_Tests_8bit(const Emulation *emulator, const EmulationState *
 
 void Load_And_Store_Tests_16bit(const Emulation *emulator, const EmulationState *emulationCtx)
 {
+    // GB_HRAM_START = 0xFF80
     constexpr uint8_t ldRRNNInstruction[] = {0x01, 0xCD, 0xAB};   // LD BC, 0xABCD
-    constexpr uint8_t ldNNSPInstruction[] = {0x08, 0x34, 0x12};   // LD (0x1234), SP
+    constexpr uint8_t ldNNSPInstruction[] = {0x08, 0xFF, 0x80};   // LD (0xFF80), SP
     constexpr uint8_t ldSPHLInstruction[] = {0xF9};               // LD SP, HL
     constexpr uint8_t pushRRInstruction[] = {0xC5};               // PUSH BC
     constexpr uint8_t popRRInstruction[] =  {0xD1};               // POP DE
 
     RunProgram(emulator, emulationCtx, ldRRNNInstruction, sizeof(ldRRNNInstruction));
     EXPECT_TRUE(emulationCtx->registers->BC == 0xABCD) << "LD BC, 0xABCD";
+
     {
         uint16_t stackPointerVal = emulationCtx->registers->SP;
         RunProgram(emulator, emulationCtx, ldNNSPInstruction, sizeof(ldNNSPInstruction));
-        uint8_t lsb = emulationCtx->memory[0x1234];
-        uint8_t msb = emulationCtx->memory[0x1235];
+        
+        uint8_t lsb = GB_BusRead(emulationCtx, GB_HRAM_START);
+        uint8_t msb = GB_BusRead(emulationCtx, GB_HRAM_START + 1);
 
         EXPECT_TRUE(lsb == (stackPointerVal & 0xFF) && msb == (stackPointerVal >> 8)) << "LD (0x1234), SP";
     }
@@ -151,8 +153,8 @@ void Load_And_Store_Tests_16bit(const Emulation *emulator, const EmulationState 
         uint16_t stackBeforePush = emulationCtx->registers->SP;
         RunProgram(emulator, emulationCtx, pushRRInstruction, sizeof(pushRRInstruction));
 
-        uint8_t msb = emulationCtx->memory[--stackBeforePush];
-        uint8_t lsb = emulationCtx->memory[--stackBeforePush];
+        uint8_t msb = GB_BusRead(emulationCtx, --stackBeforePush);
+        uint8_t lsb = GB_BusRead(emulationCtx, --stackBeforePush);
 
         EXPECT_TRUE(msb== 0xA0 && lsb == 0xB0) << "PUSH BC";
     }
@@ -165,10 +167,9 @@ void CPU_Jumps_Tests(const Emulation *emulator, const EmulationState *emulationC
 {
     constexpr uint8_t jumpInstruction[] = {0xC3, 0x10, 0x00};   // JP 0x0010
     constexpr uint8_t jumpRelativeInstruction[] = {0x18, 0x0F}; // JR 0x000F
-    
-    constexpr uint8_t callInstruction[] = {0xCD, 0x20, 0x00}; // CALL 0x0020 
-    constexpr uint8_t returnInstruction[] = {0xC9};           
-    
+    constexpr uint8_t callInstruction[] = {0xCD, 0x20, 0x00}; // CALL 0x0020
+    constexpr uint8_t returnInstruction[] = {0xC9};
+
     constexpr uint8_t conditionalJumpInstruction[] = {0xC2, 0x30, 0x00};   // JP NZ, 0x0030
     constexpr uint8_t conditionalJumpRelativeInstruction[] = {0x20, 0x0F}; // JR NZ, 0x000F
     

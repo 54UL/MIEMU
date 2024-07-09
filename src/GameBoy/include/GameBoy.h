@@ -6,7 +6,7 @@
 #include <Emulation/GB_SystemContext.h>
 
 //App implementation
-Emulation GameBoyEmulator = 
+Emulation GameBoyEmulator =
 {
     .GetInfo = GB_GetInfo,
     .Initialize = GB_Initialize,

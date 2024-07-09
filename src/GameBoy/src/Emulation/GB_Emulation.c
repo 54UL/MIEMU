@@ -1,13 +1,4 @@
 #include <Emulation/GB_Emulation.h>
-#include <Emulation/GB_Instruction.h>
-
-#include <SOC/GB_CPU.h>
-#include <SOC/GB_Opcodes.h>
-
-#include <Memory/GB_MemoryMap.h>
-
-#include <string.h>
-#include <minemu.h>
 
 static EmulationState * s_systemContext;
 static uint32_t s_instructionLenght = 0;
@@ -120,23 +111,14 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
 uint8_t GB_Initialize(int argc, const char ** argv)
 {
     MNE_New(s_systemContext->registers, 1, GB_Registers);
-    MNE_New(s_systemContext->memory, GB_MEMORY_SIZE, uint8_t);
 
-    // Default memory values on power on/reset 
-    // ONLY FOR TESTS, BIOS SHOULD CONFIGURE  ALL REGISTERS...
+    MNE_New(s_systemContext->bank_00, GB_ROM_SIZE, uint8_t);
+    MNE_New(s_systemContext->vram, GB_VRAM_SIZE, uint8_t);
+    MNE_New(s_systemContext->hram, GB_HRAM_SIZE, uint8_t);
 
-    // s_systemContext->registers->SP = 0xFFFE;
-    // s_systemContext->memory[GB_IE_REGISTER] = 0x00;
-    // s_systemContext->memory[GB_IF_REGISTER] = 0xE0;
+    // TODO: ADD HERE PC = 0X100
+    s_systemContext->bios_enabled = 0; // 0 IS ONLY FOR UNIT TESTING BECAUS WE ARE LOADING IT FROM A FILE AN PLACING IT MANUALLY INTO BANK_00
 
-    // s_systemContext->memory[GB_LCDC_REGISTER] = 0x91;
-    // s_systemContext->memory[GB_STAT_REGISTER] = 0x81;
-
-    // s_systemContext->memory[GB_BGP_REGISTER] = 0xFC;
-    // s_systemContext->memory[GB_OBP0_REGISTER] = 0XFF;
-    // s_systemContext->memory[GB_OBP1_REGISTER] = 0XFF;
-
-    // s_systemContext->IF = 0x00;
     return 0;
 }
 
@@ -229,10 +211,10 @@ void GB_PopulateMemory(const uint8_t *buffer, size_t bytesRead)
     uint16_t ramIndex = 0;// replace with 0x1000...
     uint16_t bufferIndex = 0;
 
-    // TODO: add memory offset cond: (ramindex + 0x1000) < bytesRead
+    // TODO: add bank_00 offset cond: (ramindex + 0x1000) < bytesRead
     for (; ramIndex < bytesRead; ramIndex++, bufferIndex++)
     {
-        s_systemContext->memory[ramIndex] = buffer[bufferIndex];
+        s_systemContext->bank_00[ramIndex] = buffer[bufferIndex];
     }
     //TODO: ADD RETURN TO CHECK 
     GB_ParseRom(buffer,bytesRead);
@@ -246,7 +228,11 @@ void GB_QuitProgram()
     }
 
     MNE_Delete(s_systemContext->registers);
-    MNE_Delete(s_systemContext->memory);
+
+    MNE_Delete(s_systemContext->bank_00);
+    MNE_Delete(s_systemContext->vram);
+    MNE_Delete(s_systemContext->hram);
+    
     MNE_Delete(s_systemContext->header);
 }
 
@@ -260,8 +246,9 @@ int GB_TickEmulation()
     //TODO: Implement CPU step function that take into account prefetch cycle (before executing an instruction fetch another one then execute both in order)
     
     if (s_systemContext == NULL) return 0;
+
     // Fetch
-    const uint8_t instr = s_systemContext->memory[s_systemContext->registers->PC++];
+    const uint8_t instr = GB_BusRead(s_systemContext, s_systemContext->registers->PC++);
 
     const GameBoyInstruction *fetchedInstruction = GB_FetchInstruction(instr);
     uint8_t clockCycles = 0;
@@ -275,17 +262,11 @@ int GB_TickEmulation()
             s_systemContext->registers->PC--;
             return 1;
         }
+        
 #ifdef GB_DEBUG
         if (instr != 0xCB) {
             MNE_Log("%-32s PC:[0x%02X] HANDLER: %s\n", gb_opcodes_names[instr], s_systemContext->registers->PC - 1, fetchedInstruction->handlerName);
         }
-
-        //  PRINT REGS INFO (MOVE THIS TO ANOTHER LOG DUMP... OR IMPLEMENT MULTIPLE DEBUG WINDOWS ON IMGUI...)
-        // MNE_Log("[A: 0x%02X][F: 0x%02X][B: 0x%02X][C: 0x%02X][D: 0x%02X][E: 0x%02X][H: 0x%02X][L: 0x%02X][PC: 0x%04X][SP: 0x%04X]\n",
-        //         s_systemContext->registers->A, s_systemContext->registers->F, s_systemContext->registers->B, s_systemContext->registers->C,
-        //         s_systemContext->registers->D, s_systemContext->registers->E, s_systemContext->registers->H, s_systemContext->registers->L,
-        //         s_systemContext->registers->PC, s_systemContext->registers->SP);
-
 #endif
         s_systemContext->registers->INSTRUCTION = instr;
         clockCycles = fetchedInstruction->handler(s_systemContext);
@@ -295,7 +276,7 @@ int GB_TickEmulation()
     else
     {        
         s_systemContext->registers->INSTRUCTION = GB_INVALID_INSTRUCTION; // Invalidate last instruction entry
-        s_systemContext->memory[GB_HALT_REGISTER] = 0x01; // TODO: IT MAY B NEEDED USING BUS WRITE TO TRIGGER REGISTER BEHEAVIOURS
+        GB_BusWrite(s_systemContext, GB_HALT_REGISTER, 0x01);
 
         MNE_Log("[INVALID INSTRUCTION]:[%02X][HALTED]\n", instr);
         return 0;

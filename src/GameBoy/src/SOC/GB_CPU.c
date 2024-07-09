@@ -1699,7 +1699,8 @@ uint8_t GB_RST_N(EmulationState *ctx)
 //TODO: MAKE MORE READABLE THIS FUNCTION AND AVOID MOVING CODE INTO FUNCTIONS (TO AVOID STACK OVERFLOWS ON MCU'S)
 uint8_t GB_CB_PREFIX(EmulationState *ctx)
 {
-    const uint8_t cbInstr = ctx->memory[ctx->registers->PC++];
+    const uint8_t cbInstr = GB_BusRead(ctx, ctx->registers->PC++);
+    
     MNE_Log("%-32s PC:[0x%02X] CB_PREFIX_HANDLER: ", opcode_cb_names[cbInstr], ctx->registers->PC - 1);
 
     ctx->registers->INSTRUCTION = cbInstr;

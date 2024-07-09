@@ -1,19 +1,23 @@
 #ifndef GB_EMULATION_H
 #define GB_EMULATION_H
 
-#include <minemu.h>
-#include <Emulation/GB_Instruction.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include <minemu.h>
+#include <Emulation/GB_Instruction.h>
 #include <Memory/GB_Header.h>
 #include <SOC/GB_LCD.h>
+#include <SOC/GB_Bus.h>
+#include <SOC/GB_CPU.h>
+#include <SOC/GB_Opcodes.h>
 
 //0XD3 IS THE FIRST NOT VALID DMG OPCODE 
 #define GB_INVALID_INSTRUCTION 0xD3
 
 // CPU FREQ  4.194304 hz or 238.41857910156 ns
 #define GB_DMG_CPU_FREQ_NS 238.41f
-#define GB_VRAM_SIZE 8192
 
 EmulationInfo GB_GetInfo();
 uint8_t       GB_Initialize(int argc, const char ** argv);

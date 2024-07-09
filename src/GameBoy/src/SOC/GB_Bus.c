@@ -2,37 +2,33 @@
 #include <minemu/MNE_Log.h>
 
 /* GB_Bus.c TODOS
-- IMPLEMENT HARDWARE REGISTERS.... LOL
-- MEMORY ACCESS SHOULD NOT BE MULTI THREADED...
+- FIX THE IF-ELSE HELL
 */
 
 uint8_t GB_InAddressRange(const uint16_t a, const uint16_t b, const uint16_t addrr)
 {
     // TODO:: ADD ASSERTS IF A > B AND B < A :)
-    return (a >= addrr) && (addrr <= b);
-} 
+    return (addrr >= a) && (addrr <= b);
+}
 
-uint8_t GB_BusRead(EmulationState *ctx, uint16_t address)
+uint8_t GB_BusRead(const EmulationState *ctx, uint16_t address)
 {
-    // TODO: ONLY USING IMPLEMENTED ADDRESES....
     if (GB_InAddressRange(GB_BANK_00_START, GB_BANK_00_END, address))
     {
-        // BIOS READ (TODO CHECK BOOT ROM REGISTER TO DISABLE)
-        return ctx->memory[address]; // lol...
+        return ctx->bios_enabled ? ctx->bios[address] : ctx->bank_00[address]; // lol...
     }
     else if (GB_InAddressRange(GB_BANK_NN_START, GB_BANK_NN_END, address))
     {
         // MB0 GOES HERE...
-        return ctx->memory[address]; // lol...
+        MNE_Log("Not implemented readable GB_BANK_NN %04x\n", address);
     }
     else if (GB_InAddressRange(GB_VRAM_START, GB_VRAM_END, address))
     {
-        // TODO: ADD VRAM READ
+        return ctx->vram[GB_VRAM_START - address];
     }
     else if (GB_InAddressRange(GB_ERAM_START, GB_ERAM_END, address))
     {
         MNE_Log("Not implemented readable GB_ERAM %04x\n", address);
-
     }
     else if (GB_InAddressRange(GB_WRAM_START, GB_WRAM_END, address))
     {
@@ -52,41 +48,66 @@ uint8_t GB_BusRead(EmulationState *ctx, uint16_t address)
     }
     else if (GB_InAddressRange(GB_NOT_USABLE_RAM_START, GB_NOT_USABLE_RAM_END, address))
     {
-        MNE_Log("Not readeable memory range %04x\n", address);
+        MNE_Log("Warning, reading from GB_NOT_USABLE_RAM ... %04x\n", address);
+        return 0xFF;
     }
     else if (GB_InAddressRange(GB_IO_START, GB_IO_END, address))
     {
-        MNE_Log("Not readeable IO %04x\n", address);
+        if (address == GB_IF_REGISTER) // IF REGISTER
+        {
+            return ctx->registers->IF.value;
+        }
+        else if (address == GB_LCDC_REGISTER) // LCD REGISTER
+        {
+            return ctx->registers->LCD_CONTROL.value;
+        }
+        else if (address == GB_LCD_STAT_REGISTER) // LCD REGISTER
+        {
+            return ctx->registers->LCD_STAT.value;
+        }
+        else
+        {
+            MNE_Log("IO RANGE NOT READBLE (NOT IMPLEMENTED!!!) io address: 0x%04x\n", address);
+        }
     }
     else if (GB_InAddressRange(GB_HRAM_START, GB_HRAM_END, address))
     {
-        MNE_Log("Not readeable GB_HRAM %04x\n", address);
+        return ctx->hram[GB_HRAM_START - address];
     }
-    else if(address == 0xFFFF) // IE REGISTER
+    // INDIVIDUAL ADDRESSES (TODO: FIX THIS TRASH)
+    else if (address == GB_IE_REGISTER)
     {
-        // TODO: INSERT HERE IE REGISTER MAP
+        return ctx->registers->IE.value;
     }
-    else 
+    else
     {
-        MNE_Log("Undefined memory access read: addrr %04x\n", address);
+        MNE_Log("Undefined read access at: %04x\n", address);
     }
+
+    return 0;
 }
 
-void GB_BusWrite(EmulationState *ctx, uint16_t address, uint8_t value)
+void GB_BusWrite(const EmulationState *ctx, uint16_t address, uint8_t value)
 {
     if (GB_InAddressRange(GB_BANK_00_START, GB_BANK_00_END, address))
     {
         // BIOS READ (TODO CHECK BOOT ROM REGISTER TO DISABLE)
-        ctx->memory[address] = value;
+        if (ctx->bios_enabled && address <= 0xFF)
+        {
+            MNE_Log("Fool u cannot write in this region while the bios is enabled... addrr: %04x\n", address);
+            return;
+        }
+
+        ctx->bank_00[address] = value;
     }
     else if (GB_InAddressRange(GB_BANK_NN_START, GB_BANK_NN_END, address))
     {
         // MB0 GOES HERE...
-        ctx->memory[address] = value;
+        MNE_Log("Not implemented writable GB_BANK_NN %04x\n", address);
     }
     else if (GB_InAddressRange(GB_VRAM_START, GB_VRAM_END, address))
     {
-        // TODO: ADD VRAM wriate
+        ctx->vram[GB_VRAM_START - address] = value;
     }
     else if (GB_InAddressRange(GB_ERAM_START, GB_ERAM_END, address))
     {
@@ -110,24 +131,38 @@ void GB_BusWrite(EmulationState *ctx, uint16_t address, uint8_t value)
     }
     else if (GB_InAddressRange(GB_NOT_USABLE_RAM_START, GB_NOT_USABLE_RAM_END, address))
     {
-        MNE_Log("Not writable memory range %04x\n", address);
+        MNE_Log("Not writable GB_NOT_USABLE_RAM range %04x\n", address);
     }
     else if (GB_InAddressRange(GB_IO_START, GB_IO_END, address))
     {
-        MNE_Log("Not writable IO %04x\n", address);
+        if (address == GB_IF_REGISTER) // IF REGISTER
+        {
+            ctx->registers->IF.value = value;
+        }
+        else if (address == GB_LCDC_REGISTER) // LCD REGISTER
+        {
+            ctx->registers->LCD_CONTROL.value = value;
+        }
+        else if (address == GB_LCD_STAT_REGISTER) // LCD REGISTER
+        {
+            ctx->registers->LCD_STAT.value = value;
+        }
+        else
+        {
+            MNE_Log("IO RANGE NOT WRITABLE (NOT IMPLEMENTED!!!)  io address: 0x%04x\n", address);
+        }
     }
     else if (GB_InAddressRange(GB_HRAM_START, GB_HRAM_END, address))
     {
-        MNE_Log("Not writable GB_HRAM %04x\n", address);
+        ctx->hram[GB_HRAM_START - address] = value;
     }
-    else if(address == 0xFFFF) // IE REGISTER
+    else if (address == GB_IE_REGISTER) // IE REGISTER
     {
-        // TODO: INSERT HERE IE REGISTER MAP
-        MNE_Log("Not writable IE Register %04x\n", address);
+      ctx->registers->IE.value = value;
     }
-    else 
+    else
     {
-        MNE_Log("Undefined memory access read: addrr %04x\n", address);
+        MNE_Log("Undefined writable access at: %04x\n", address);
     }
 }
 
@@ -166,7 +201,7 @@ uint8_t GB_GetReg8(EmulationState *ctx, uint8_t r)
 
 void GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode)
 {
-    //TODO: IMPROVE CONDITIONS
+    // TODO: IMPROVE CONDITIONS
 
     switch (mode)
     {
@@ -186,9 +221,9 @@ void GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode)
         break;
 
     case REG16_MODE_HL_PLUS_HL_MINUS:
-        //TODO:IMPLEMENT ME MF
+        // TODO:IMPLEMENT ME MF
         break;
-        
+
     default:
         MNE_Log("ERROR: GB_SetReg16 CANNOT DEDEUCE REGISTER ADDRESSING MODE");
         break;
@@ -197,7 +232,7 @@ void GB_SetReg16(EmulationState *ctx, uint8_t r, uint16_t value, uint8_t mode)
 
 uint16_t GB_GetReg16(EmulationState *ctx, uint8_t r, uint8_t mode)
 {
-    //TODO: IMPROVE CONDITIONS
+    // TODO: IMPROVE CONDITIONS
     switch (mode)
     {
     case REG16_MODE_AF:
@@ -205,16 +240,16 @@ uint16_t GB_GetReg16(EmulationState *ctx, uint8_t r, uint8_t mode)
     case REG16_MODE_SP:
         if (r == 3)
         {
-            return ctx->registers->SP ;
+            return ctx->registers->SP;
         }
-        else 
+        else
         {
             return ctx->registers->FILE_16[r];
         }
         break;
     case REG16_MODE_HL_PLUS_HL_MINUS:
         /* code */
-        break; 
+        break;
     default:
         MNE_Log("ERROR: GB_GetReg16 CANNOT DEDEUCE REGISTER ADDRESSING MODE");
         break;

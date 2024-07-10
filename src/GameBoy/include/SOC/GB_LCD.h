@@ -1,6 +1,8 @@
 #ifndef GB_LCD_HPP
 #define GB_LCD_HPP
 
+#include <Emulation/GB_SystemContext.h>
+
 
 // 160 SEGMENTS AT 108.7 micro seconds.
 // 144 LINES AT 15.66 milli seconds
@@ -50,6 +52,12 @@
 */
 
 void GB_LCD_Init();
-void GB_LCD_Tick();
+void GB_LCD_Tick(EmulationState* state, uint8_t cycles);
+
+void GB_RenderScanLine();
+void GB_DrawBackground();
+void GB_DrawWindow();
+void GB_DrawObjects();
+
 
 #endif

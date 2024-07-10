@@ -7,7 +7,12 @@
 
 typedef struct
 {
-    // Main memory and cpu regs    
+    //PPU
+    uint16_t ppuCycles;
+    uint8_t  ppuMode;
+
+    // CPU
+    uint16_t cpuCycles; 
     uint8_t ime;
     uint8_t bios_enabled;
 
@@ -16,7 +21,7 @@ typedef struct
     uint8_t         *bank_00;
     uint8_t         *vram;
     uint8_t         *hram;
-
+    
 
     GB_Registers    *registers;
     // Cartige

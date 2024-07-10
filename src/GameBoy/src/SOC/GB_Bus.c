@@ -24,6 +24,8 @@ uint8_t GB_BusRead(const EmulationState *ctx, uint16_t address)
     }
     else if (GB_InAddressRange(GB_VRAM_START, GB_VRAM_END, address))
     {
+        MNE_Log("VRAM READ!!! %04x\n", address);
+
         return ctx->vram[GB_VRAM_START - address];
     }
     else if (GB_InAddressRange(GB_ERAM_START, GB_ERAM_END, address))
@@ -107,6 +109,8 @@ void GB_BusWrite(const EmulationState *ctx, uint16_t address, uint8_t value)
     }
     else if (GB_InAddressRange(GB_VRAM_START, GB_VRAM_END, address))
     {
+        MNE_Log("VRAM WRITE!!! %04x\n", address);
+
         ctx->vram[GB_VRAM_START - address] = value;
     }
     else if (GB_InAddressRange(GB_ERAM_START, GB_ERAM_END, address))
@@ -137,14 +141,20 @@ void GB_BusWrite(const EmulationState *ctx, uint16_t address, uint8_t value)
     {
         if (address == GB_IF_REGISTER) // IF REGISTER
         {
+            MNE_Log("IF REG WRITE!!! %04x\n", address);
+
             ctx->registers->IF.value = value;
         }
         else if (address == GB_LCDC_REGISTER) // LCD REGISTER
         {
+            MNE_Log("GB_LCDC_REGISTER REG WRITE!!! %04x\n", address);
+
             ctx->registers->LCD_CONTROL.value = value;
         }
         else if (address == GB_LCD_STAT_REGISTER) // LCD REGISTER
         {
+            MNE_Log("GB_LCD_STAT_REGISTER REG WRITE!!! %04x\n", address);
+
             ctx->registers->LCD_STAT.value = value;
         }
         else

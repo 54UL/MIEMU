@@ -289,6 +289,15 @@ typedef struct
     // LCD Registers
     GB_LCD_STAT_Register LCD_STAT;
     GB_LCDC_Register LCD_CONTROL;
+    uint8_t LCD_SCY;
+    uint8_t LCD_SCX;
+    uint8_t LCD_LY;
+    uint8_t LCD_LYC;
+    uint8_t LCD_BGP;
+    uint8_t LCD_OBP0;
+    uint8_t LCD_OBP1;
+    uint8_t LCD_WY;
+    uint8_t LCD_WX;
 
     // OWN Registers (used for testing and such)
     uint16_t INSTRUCTION;

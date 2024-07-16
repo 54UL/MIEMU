@@ -92,16 +92,16 @@
 #define GB_LCDC_REGISTER 0xFF40 // (LCD Control Register)
 #define GB_LCD_STAT_REGISTER 0xFF41 // (LCDC Status Register)
 
-#define GB_SCY_REGISTER 0xFF42  // (Scroll Y)
-#define GB_SCX_REGISTER 0xFF43  // (Scroll X)
-#define GB_LY_REGISTER 0xFF44   // (LCDC Y-Coordinate)
-#define GB_LYC_REGISTER 0xFF45  // (LY Compare)
-#define GB_DMA_REGISTER 0xFF46  // (Direct Memory Access)
-#define GB_BGP_REGISTER 0xFF47  // (Background Palette Data)
-#define GB_OBP0_REGISTER 0xFF48 // (Object Palette 0 Data)
-#define GB_OBP1_REGISTER 0xFF49 // (Object Palette 1 Data)
-#define GB_WY_REGISTER 0xFF4A   // (Window Y Position)
-#define GB_WX_REGISTER 0xFF4B   // (Window X Position - 7)
+#define GB_SCY_REGISTER 0xFF42
+#define GB_SCX_REGISTER 0xFF43
+#define GB_LY_REGISTER 0xFF44
+#define GB_LYC_REGISTER 0xFF45
+#define GB_DMA_REGISTER 0xFF46
+#define GB_BGP_REGISTER 0xFF47
+#define GB_OBP0_REGISTER 0xFF48
+#define GB_OBP1_REGISTER 0xFF49
+#define GB_WY_REGISTER 0xFF4A
+#define GB_WX_REGISTER 0xFF4B
 
 // ---------------------------- NOT USED (yet)
 #define GB_HALT_REGISTER 0xFF50
@@ -117,20 +117,30 @@
 #define GB_VRAM_START 0x8000
 #define GB_VRAM_END 0x9FFF
 
+// VRAM BLOCKS
+#define GB_VRAM_BLOCK_0_START GB_VRAM_START
+#define GB_VRAM_BLOCK_0_END 0x87FF
+
+#define GB_VRAM_BLOCK_1_START 0x8800
+#define GB_VRAM_BLOCK_1_END 0x8FFF
+
+#define GB_VRAM_BLOCK_2_START 0x9000
+#define GB_VRAM_BLOCK_2_END GB_VRAM_END
+
 #define GB_ERAM_START 0xA000
 #define GB_ERAM_END 0xBFFF
 
-#define GB_WRAM_START 0XC000
+#define GB_WRAM_START 0xC000
 #define GB_WRAM_END 0xCFFF
 
 #define GB_WRAM2_START 0XD000
 #define GB_WRAM2_END 0xDFFF
 
 #define GB_ECHO_RAM_START 0xE000
-#define GB_ECHO_RAM_END 0XFDFF
+#define GB_ECHO_RAM_END 0xFDFF
 
-#define GB_OAM_START 0XFE00
-#define GB_OAM_END 0XFE9F
+#define GB_OAM_START 0xFE00
+#define GB_OAM_END 0xFE9F
 
 #define GB_NOT_USABLE_RAM_START 0xFEA0
 #define GB_NOT_USABLE_RAM_END 0xFEFF
@@ -151,7 +161,7 @@
 #define GB_WRAM2_SIZE 0x2000
 
 #define GB_IO_RAM_SIZE 0x7F
-#define GB_HRAM_SIZE 0X7E
+#define GB_HRAM_SIZE 0x7E
 
 typedef enum
 {
@@ -177,11 +187,11 @@ typedef struct
     {
         struct
         {
-            uint8_t IF_VBLANK : 1;
-            uint8_t IF_LCD : 1;
-            uint8_t IF_TIMER : 1;
-            uint8_t IF_SERIAL : 1;
-            uint8_t IF_JOYPAD : 1;
+            uint8_t VBLANK : 1;
+            uint8_t LCD : 1;
+            uint8_t TIMER : 1;
+            uint8_t SERIAL : 1;
+            uint8_t JOYPAD : 1;
         };
         uint8_t value; // Access entire register
     };
@@ -193,11 +203,11 @@ typedef struct
     {
         struct
         {
-            uint8_t IE_VBLANK : 1;
-            uint8_t IE_LCD : 1;
-            uint8_t IE_TIMER : 1;
-            uint8_t IE_SERIAL : 1;
-            uint8_t IE_JOYPAD : 1;
+            uint8_t VBLANK : 1;
+            uint8_t LCD : 1;
+            uint8_t TIMER : 1;
+            uint8_t SERIAL : 1;
+            uint8_t JOYPAD : 1;
         };
         uint8_t value; // Access entire register
     };

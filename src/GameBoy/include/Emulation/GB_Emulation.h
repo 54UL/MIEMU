@@ -29,6 +29,9 @@ void          GB_SetEmulationContext(const void *context);
 void          GB_OnRender(uint32_t* pixels, const int64_t w, const int64_t h);
 
 // INTERNAL
+uint8_t             GB_TickCpu();
+uint8_t             GB_HandleInterrupts();
+
 void                GB_PopulateMemory(const uint8_t *buffer, size_t bytesRead);
 GameBoyInstruction* GB_FetchInstruction(const uint8_t opcode);
 void                GB_ParseRom(const uint8_t *buffer, size_t size);

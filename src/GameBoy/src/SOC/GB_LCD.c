@@ -67,12 +67,19 @@ void GB_LCD_Tick(EmulationState* state, uint8_t cycles)
     }
 }
 
-void GB_RenderScanLine()
+
+void GB_RenderScanLine(EmulationState* state)
 {
+  // get the propper row of pixels using LY (18 tiles or 144 pixels (288 bytes wide))
+  // check addresing mode (signed(0x8000) or unsigned(0x9000))
+  // get the tile id deduced by the adressing mode
+  // based on tile id get the tile data (16 bytes wide) and decode the pallete
+  // based on what the decoded values gave, render into the screen using the green shades array
 }
 
 void GB_DrawBackground()
 {
+
 }
 
 void GB_DrawWindow()

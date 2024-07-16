@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(MINEMU C)
 
 # BUILD CONFIGS
-set(MINEMU_TESTS OFF)
+set(MINEMU_TESTS ON)
 set(MINEMU_DEBUG ON)
 
 # gtests

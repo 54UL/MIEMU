@@ -13,9 +13,9 @@ typedef struct
 
     // CPU
     uint16_t cpuCycles; 
-    uint8_t ime;
-    uint8_t bios_enabled;
-
+    uint8_t  ime;
+    uint8_t  bios_enabled;
+ 
     // TODO: MOVE THIS, MEMORY SHOULD BE ACCESED BY BUS READ AND BUS WRITE IF U WANT TO KNOW A SPECIFIC MEMORY REGION...
     uint8_t         *bios;
     uint8_t         *bank_00;

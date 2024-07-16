@@ -241,12 +241,55 @@ void GB_TickTimers()
 
 }
 
-int GB_TickEmulation()
+uint8_t GB_HandleInterrupts()
+{
+    //TODO: IMPLEMENT HALT BUG (LOL)
+    uint16_t interruptSrc = 0;
+
+    if (!s_systemContext->ime)
+    {
+        return 0; // 0 clock cycles consumed
+    } 
+
+    // VBLANK INTERRUPT
+    if (s_systemContext->registers->IE.VBLANK && s_systemContext->registers->IF.VBLANK){
+        interruptSrc = 0x40; // VBLANK INTERRUPT SOURCE
+        s_systemContext->registers->IF.VBLANK = 0;
+    }
+
+    if (s_systemContext->registers->IE.LCD && s_systemContext->registers->IF.LCD){
+        interruptSrc = 0x48; // LCD STAT INTERRUPT SOURCE
+        s_systemContext->registers->IF.LCD = 0;
+    }
+    
+    if (s_systemContext->registers->IE.SERIAL && s_systemContext->registers->IF.SERIAL)
+    {
+        interruptSrc = 0x58; // SERIAL INTERRUPT SOURCE
+        s_systemContext->registers->IF.SERIAL = 0;
+    }
+
+    if (s_systemContext->registers->IE.JOYPAD && s_systemContext->registers->IF.JOYPAD)
+    {
+        interruptSrc = 0x60; // JOYPAD INTERRUPT SOURCE
+        s_systemContext->registers->IF.JOYPAD = 0;
+    }
+
+    s_systemContext->ime = 0; // Disable intterupts before calling the intrrupt handler
+
+    // TODO: This should be an GB_CALL function but i didnt make to support operands; only context argument...
+    s_systemContext->registers->SP--;
+    GB_BusWrite(s_systemContext, s_systemContext->registers->SP--, s_systemContext->registers->PC >> 8);
+    GB_BusWrite(s_systemContext, s_systemContext->registers->SP, s_systemContext->registers->PC & 0xFF);
+    
+    s_systemContext->registers->PC = interruptSrc;
+
+    // From magical sources, this is what it lasts the full interrupt handling (2 nops and a call that lasts only 3 M-Cycles)
+    return 5;
+}
+
+uint8_t  GB_TickCpu()
 {
     //TODO: Implement CPU step function that take into account prefetch cycle (before executing an instruction fetch another one then execute both in order)
-    
-    if (s_systemContext == NULL) return 0;
-
     // Fetch
     const uint8_t instr = GB_BusRead(s_systemContext, s_systemContext->registers->PC++);
 
@@ -281,6 +324,23 @@ int GB_TickEmulation()
         MNE_Log("[INVALID INSTRUCTION]:[%02X][HALTED]\n", instr);
         return 0;
     }
+}
+
+int GB_TickEmulation()
+{
+    uint8_t currentCycles = 0; 
+    
+    if (s_systemContext == NULL) return 0;
+
+    // CPU
+    currentCycles += GB_HandleInterrupts();
+    currentCycles += GB_TickCpu();
+    
+    // DISPLAY
+    GB_LCD_Tick(s_systemContext, currentCycles);
+    s_systemContext->cpuCycles += currentCycles;
+
+    return 1;
 }
 
 GameBoyInstruction* GB_FetchInstruction(const uint8_t opcode)

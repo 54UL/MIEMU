@@ -264,4 +264,6 @@ uint16_t GB_GetReg16(EmulationState *ctx, uint8_t r, uint8_t mode)
         MNE_Log("ERROR: GB_GetReg16 CANNOT DEDEUCE REGISTER ADDRESSING MODE");
         break;
     }
+    
+    return 0;
 }

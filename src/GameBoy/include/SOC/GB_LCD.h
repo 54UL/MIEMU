@@ -21,7 +21,6 @@
 
 #define GB_DISPLAY_WIDHT 160
 #define GB_DISPLAY_HEIGHT 144
-#define GB_DISPLAY_HEIGHT 144
 
 /*
     Initialize LCD Control (LCDC) Register (0xFF40):
@@ -54,7 +53,7 @@
 void GB_LCD_Init();
 void GB_LCD_Tick(EmulationState* state, uint8_t cycles);
 
-void GB_RenderScanLine();
+void GB_RenderScanLine(EmulationState* state);
 void GB_DrawBackground();
 void GB_DrawWindow();
 void GB_DrawObjects();

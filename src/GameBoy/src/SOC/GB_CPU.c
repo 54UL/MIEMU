@@ -20,8 +20,8 @@ uint8_t GB_LD_R_R(EmulationState *ctx)
     /*
         R = R
     */
-    const uint8_t r1 = (ctx->registers->INSTRUCTION & 0x38) >> 3;
-    const uint8_t r2 = (ctx->registers->INSTRUCTION & 0x07);
+    const uint8_t r1 = (ctx->registers.INSTRUCTION & 0x38) >> 3;
+    const uint8_t r2 = (ctx->registers.INSTRUCTION & 0x07);
 
     GB_SetReg8(ctx, r1, GB_GetReg8(ctx, r2));
 
@@ -34,9 +34,9 @@ uint8_t GB_LD_R_N(EmulationState *ctx)
     /*
         R = read(PC++)
     */
-    const uint8_t r = (ctx->registers->INSTRUCTION & 0x38) >> 3;
+    const uint8_t r = (ctx->registers.INSTRUCTION & 0x38) >> 3;
 
-    GB_SetReg8(ctx, r, GB_BusRead(ctx, ctx->registers->PC++));
+    GB_SetReg8(ctx, r, GB_BusRead(ctx, ctx->registers.PC++));
 
     return 8; // instruction clock cycles
 }
@@ -47,8 +47,8 @@ uint8_t GB_LD_R_HL(EmulationState *ctx)
     /*
         R = read(HL)
     */
-    const uint8_t r = (ctx->registers->INSTRUCTION & 0x38) >> 3;
-    GB_SetReg8(ctx, r, GB_BusRead(ctx, ctx->registers->HL));
+    const uint8_t r = (ctx->registers.INSTRUCTION & 0x38) >> 3;
+    GB_SetReg8(ctx, r, GB_BusRead(ctx, ctx->registers.HL));
 
     return 8;
 }
@@ -59,9 +59,9 @@ uint8_t GB_LD_HL_R(EmulationState *ctx)
     /*
         write(HL, R)
     */
-    const uint8_t r = ctx->registers->INSTRUCTION & 0x07;
+    const uint8_t r = ctx->registers.INSTRUCTION & 0x07;
 
-    GB_SetReg8(ctx, r, GB_BusRead(ctx, ctx->registers->HL));
+    GB_SetReg8(ctx, r, GB_BusRead(ctx, ctx->registers.HL));
     return 8;
 }
 
@@ -72,9 +72,9 @@ uint8_t GB_LD_HL_N(EmulationState *ctx)
         n = read(PC++)
         write(HL, n)
     */
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
 
-    GB_BusWrite(ctx, ctx->registers->HL, n);
+    GB_BusWrite(ctx, ctx->registers.HL, n);
     return 1; // TODO, PLACEHOLDER TIMING...;
 }
 
@@ -84,7 +84,7 @@ uint8_t GB_LD_A_BC(EmulationState *ctx)
     /*
         A = read(BC)
     */
-    ctx->registers->A = GB_BusRead(ctx, ctx->registers->BC);
+    ctx->registers.A = GB_BusRead(ctx, ctx->registers.BC);
     return 1; // TODO, PLACEHOLDER TIMING...;
 }
 
@@ -94,7 +94,7 @@ uint8_t GB_LD_A_DE(EmulationState *ctx)
     /*
         A = read(DE)
     */
-    ctx->registers->A = GB_BusRead(ctx, ctx->registers->DE);
+    ctx->registers.A = GB_BusRead(ctx, ctx->registers.DE);
     return 1; // TODO, PLACEHOLDER TIMING...;
 }
 
@@ -106,11 +106,11 @@ uint8_t GB_LD_A_NN(EmulationState *ctx)
         A = read(nn)
     */
 
-    const uint8_t lsb = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t msb = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t lsb = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t msb = GB_BusRead(ctx, ctx->registers.PC++);
     const uint16_t nn = (uint16_t)(lsb | (msb << 8));
 
-    ctx->registers->A = GB_BusRead(ctx, nn);
+    ctx->registers.A = GB_BusRead(ctx, nn);
 
     return 1; // TODO, PLACEHOLDER TIMING...;
 }
@@ -121,7 +121,7 @@ uint8_t GB_LD_BC_A(EmulationState *ctx)
     /*
         write(BC, A)
     */
-    GB_BusWrite(ctx, ctx->registers->BC, ctx->registers->A);
+    GB_BusWrite(ctx, ctx->registers.BC, ctx->registers.A);
     return 1; // TODO, PLACEHOLDER TIMING...
 }
 
@@ -131,7 +131,7 @@ uint8_t GB_LD_DE_A(EmulationState *ctx)
     /*
         write(DE, A)
     */
-    GB_BusWrite(ctx, ctx->registers->DE, ctx->registers->A);
+    GB_BusWrite(ctx, ctx->registers.DE, ctx->registers.A);
 
     return 1; // TODO, PLACEHOLDER TIMING...;
 }
@@ -143,11 +143,11 @@ uint8_t GB_LD_NN_A(EmulationState *ctx)
         nn = unsigned_16(lsb=read(PC++), msb=read(PC++))
         write(nn, A)
     */
-    const uint8_t lsb = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t msb = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t lsb = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t msb = GB_BusRead(ctx, ctx->registers.PC++);
     const uint16_t nn = (uint16_t)(lsb | (msb << 8));
 
-    GB_BusWrite(ctx, nn,  ctx->registers->A);
+    GB_BusWrite(ctx, nn,  ctx->registers.A);
 
     return 1; // TODO, PLACEHOLDER TIMING...;
 }
@@ -160,10 +160,10 @@ uint8_t GB_LDH_A_N(EmulationState *ctx)
         A = read(unsigned_16(lsb=n, msb=0xFF))
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
     const uint16_t u16 = (uint16_t)(n | (0xFF << 8));
 
-    ctx->registers->A = GB_BusRead(ctx, u16);
+    ctx->registers.A = GB_BusRead(ctx, u16);
 
     return 1; // TODO, PLACEHOLDER TIMING...;
 }
@@ -176,10 +176,10 @@ uint8_t GB_LDH_N_A(EmulationState *ctx)
         write(unsigned_16(lsb=n, msb=0xFF), A)
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
     const uint16_t u16 = (uint16_t)(n | (0xFF << 8));
 
-    GB_BusWrite(ctx, u16,  ctx->registers->A);
+    GB_BusWrite(ctx, u16,  ctx->registers.A);
     return 1; // TODO, PLACEHOLDER TIMING...
 }
 
@@ -189,9 +189,9 @@ uint8_t GB_LDH_A_C(EmulationState *ctx)
     /*
         A = read(unsigned_16(lsb=C, msb=0xFF))
     */
-    const uint16_t u16 = (uint16_t)(ctx->registers->C | (0xFF << 8));
+    const uint16_t u16 = (uint16_t)(ctx->registers.C | (0xFF << 8));
 
-    ctx->registers->A = GB_BusRead(ctx, u16);
+    ctx->registers.A = GB_BusRead(ctx, u16);
     return 1; // TODO, PLACEHOLDER TIMING...
 }
 
@@ -202,8 +202,8 @@ uint8_t GB_LDH_C_A(EmulationState *ctx)
     /*
         write(unsigned_16(lsb=C, msb=0xFF), A)
     */
-    const uint16_t u16 = (uint16_t)(ctx->registers->C | (0xFF << 8));
-    GB_BusWrite(ctx, u16, ctx->registers->A);
+    const uint16_t u16 = (uint16_t)(ctx->registers.C | (0xFF << 8));
+    GB_BusWrite(ctx, u16, ctx->registers.A);
 
     return 1; // TODO, PLACEHOLDER TIMING...
 }
@@ -215,7 +215,7 @@ uint8_t GB_LDI_HL_A(EmulationState *ctx)
          write_memory(addr=HL, data=A); HL = HL + 1
     */
    
-    GB_BusWrite(ctx, ctx->registers->HL++, ctx->registers->A);
+    GB_BusWrite(ctx, ctx->registers.HL++, ctx->registers.A);
     return 2;
 }
 
@@ -226,7 +226,7 @@ uint8_t GB_LDI_A_HL(EmulationState *ctx)
         A = read(HL++)
     */
 
-    ctx->registers->A = GB_BusRead(ctx, ctx->registers->HL++);
+    ctx->registers.A = GB_BusRead(ctx, ctx->registers.HL++);
     return 1; // TODO, PLACEHOLDER TIMING...
 }
 
@@ -237,7 +237,7 @@ uint8_t GB_LDD_HL_A(EmulationState *ctx)
         write(HL--, A)
     */
 
-    GB_BusWrite(ctx, ctx->registers->HL--, ctx->registers->A);
+    GB_BusWrite(ctx, ctx->registers.HL--, ctx->registers.A);
     return 1; // TODO, PLACEHOLDER TIMING...
 }
 
@@ -248,7 +248,7 @@ uint8_t GB_LDD_A_HL(EmulationState *ctx)
         A = read(HL--)
     */
 
-    ctx->registers->A = GB_BusRead(ctx, ctx->registers->HL--);
+    ctx->registers.A = GB_BusRead(ctx, ctx->registers.HL--);
     return 1; // TODO, PLACEHOLDER TIMING...
 }
 
@@ -260,9 +260,9 @@ uint8_t GB_LD_RR_NN(EmulationState *ctx)
         nn = unsigned_16(lsb=read(PC++), msb=read(PC++))
         rr = nn
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4;
-    const uint8_t lsb = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t msb = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x30) >> 4;
+    const uint8_t lsb = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t msb = GB_BusRead(ctx, ctx->registers.PC++);
     const uint16_t nn = (uint16_t)(lsb | (msb << 8));
     
     GB_SetReg16(ctx, rr, nn, REG16_MODE_SP);
@@ -281,16 +281,18 @@ uint8_t GB_LD_NN_SP(EmulationState *ctx)
         write_memory(addr=nn, data=msb(SP))
     */
 
-    const uint8_t lsb = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t msb = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t lsb = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t msb = GB_BusRead(ctx, ctx->registers.PC++);
     
     const uint16_t indirect_addr = (uint16_t)(lsb | (msb << 8));
 
-    const uint8_t spl = ctx->registers->SP & 0xFF;
-    const uint8_t sph = (ctx->registers->SP >> 8) & 0xFF;
+    const uint8_t spl = ctx->registers.SP & 0xFF;
+    const uint8_t sph = (ctx->registers.SP >> 8) & 0xFF;
 
     GB_BusWrite(ctx, indirect_addr, spl);
     GB_BusWrite(ctx, indirect_addr + 1, sph);
+    
+    return 1; //TODO: CHECK TIMING!
 }
 
 uint8_t GB_LD_SP_HL(EmulationState *ctx)
@@ -299,7 +301,9 @@ uint8_t GB_LD_SP_HL(EmulationState *ctx)
     /*
         SP = HL
     */
-    ctx->registers->SP = ctx->registers->HL;
+    ctx->registers.SP = ctx->registers.HL;
+    
+    return 1; //TODO: CHECK TIMING!
 }
 
 uint8_t GB_PUSH_RR(EmulationState *ctx)
@@ -310,16 +314,18 @@ uint8_t GB_PUSH_RR(EmulationState *ctx)
         write_memory(addr=SP, data=msb(BC)); SP = SP - 1
         write_memory(addr=SP, data=lsb(BC))
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4;
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x30) >> 4;
     
     uint16_t drr = GB_GetReg16(ctx, rr, REG16_MODE_AF);
     const uint8_t l = drr & 0xFF;
     const uint8_t h = (drr >> 8) & 0xFF;
 
-    ctx->registers->SP--;
-    GB_BusWrite(ctx, ctx->registers->SP, h);
-    ctx->registers->SP--;
-    GB_BusWrite(ctx, ctx->registers->SP, l);
+    ctx->registers.SP--;
+    GB_BusWrite(ctx, ctx->registers.SP, h);
+    ctx->registers.SP--;
+    GB_BusWrite(ctx, ctx->registers.SP, l);
+
+    return 1; //TODO: CHECK TIMING!
 }
 
 uint8_t GB_POP_RR(EmulationState *ctx)
@@ -328,11 +334,13 @@ uint8_t GB_POP_RR(EmulationState *ctx)
     /*
         BC = unsigned_16(lsb=read(SP++), msb=read(SP++))
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4;
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x30) >> 4;
     
-    const uint8_t l =  GB_BusRead(ctx,ctx->registers->SP++);
-    const uint8_t h =  GB_BusRead(ctx,ctx->registers->SP++);
+    const uint8_t l =  GB_BusRead(ctx,ctx->registers.SP++);
+    const uint8_t h =  GB_BusRead(ctx,ctx->registers.SP++);
     GB_SetReg16(ctx, rr,  l | (h << 8), REG16_MODE_AF);
+    
+    return 1; //TODO: CHECK TIMING!
 }
 
 // 8 BIT ALU INSTRUCTIONS
@@ -347,18 +355,18 @@ uint8_t GB_ADD_A_R(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
         flags.C = 1 if carry_per_bit[7] else 0
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t a = ctx->registers->A;
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x07);
+    const uint8_t a = ctx->registers.A;
     const uint8_t r = GB_GetReg8(ctx, rr);
 
     const uint16_t sum =  a + r;
-    ctx->registers->A = sum;
+    ctx->registers.A = sum;
 
     // Flag manipulation
-    ctx->registers->ZERO_FLAG = sum == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = (a & 0xf) + (r & 0xf) > 0xf;
-    ctx->registers->CARRY_FLAG = sum > 0xFF;
+    ctx->registers.ZERO_FLAG = sum == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = (a & 0xf) + (r & 0xf) > 0xf;
+    ctx->registers.CARRY_FLAG = sum > 0xFF;
 
     return 4;
 }
@@ -376,14 +384,14 @@ uint8_t GB_ADD_A_N(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint16_t sum =  ctx->registers->A + n;
-    ctx->registers->A = sum;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint16_t sum =  ctx->registers.A + n;
+    ctx->registers.A = sum;
     
-    ctx->registers->ZERO_FLAG = sum == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = (n & 0xf) + (ctx->registers->A  & 0xf) > 0xf;
-    ctx->registers->CARRY_FLAG = sum > 0xFF;
+    ctx->registers.ZERO_FLAG = sum == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = (n & 0xf) + (ctx->registers.A  & 0xf) > 0xf;
+    ctx->registers.CARRY_FLAG = sum > 0xFF;
 
     //Used to set F reg 
     return 1; //TODO: CHECK TIMING!
@@ -402,15 +410,15 @@ uint8_t GB_ADD_A_HL(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    const uint8_t a = ctx->registers->A;
+    const uint8_t data = GB_BusRead(ctx, ctx->registers.HL);
+    const uint8_t a = ctx->registers.A;
     const int sum = a + data;
-    ctx->registers->A = sum;
+    ctx->registers.A = sum;
 
-    ctx->registers->ZERO_FLAG = sum == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = (a & 0xf) + (data & 0xf) > 0xf;
-    ctx->registers->CARRY_FLAG = sum > 0xFF;
+    ctx->registers.ZERO_FLAG = sum == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = (a & 0xf) + (data & 0xf) > 0xf;
+    ctx->registers.CARRY_FLAG = sum > 0xFF;
 
     return 8;
 }
@@ -427,15 +435,15 @@ uint8_t GB_ADC_A_R(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x07);
     const uint8_t value = GB_GetReg8(ctx, rr);
-    const uint16_t sum =  ctx->registers->A + ctx->registers->CARRY_FLAG + value;
-    ctx->registers->A = sum;
+    const uint16_t sum =  ctx->registers.A + ctx->registers.CARRY_FLAG + value;
+    ctx->registers.A = sum;
 
-    ctx->registers->ZERO_FLAG = sum == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = (ctx->registers->A & 0xF) + (value & 0xF) + (ctx->registers->CARRY_FLAG > 0xF);
-    ctx->registers->CARRY_FLAG = sum > 0xFF;
+    ctx->registers.ZERO_FLAG = sum == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = (ctx->registers.A & 0xF) + (value & 0xF) + (ctx->registers.CARRY_FLAG > 0xF);
+    ctx->registers.CARRY_FLAG = sum > 0xFF;
     
     return 4;
 }
@@ -453,15 +461,15 @@ uint8_t GB_ADC_A_N(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
 
-    const uint16_t sum =  ctx->registers->A + ctx->registers->CARRY_FLAG + n;
-    ctx->registers->A = sum;
+    const uint16_t sum =  ctx->registers.A + ctx->registers.CARRY_FLAG + n;
+    ctx->registers.A = sum;
 
-    ctx->registers->ZERO_FLAG = sum == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = (ctx->registers->A & 0xF) + (n & 0xF) + (ctx->registers->CARRY_FLAG > 0xF);
-    ctx->registers->CARRY_FLAG = sum > 0xFF;
+    ctx->registers.ZERO_FLAG = sum == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = (ctx->registers.A & 0xF) + (n & 0xF) + (ctx->registers.CARRY_FLAG > 0xF);
+    ctx->registers.CARRY_FLAG = sum > 0xFF;
 
     return 8;
 }
@@ -479,16 +487,16 @@ uint8_t GB_ADC_A_HL(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
-    const uint8_t a = ctx->registers->A;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.HL);
+    const uint8_t a = ctx->registers.A;
 
-    const int sum =  a + ctx->registers->CARRY_FLAG + n;
-    ctx->registers->A = sum;
+    const int sum =  a + ctx->registers.CARRY_FLAG + n;
+    ctx->registers.A = sum;
 
-    ctx->registers->ZERO_FLAG = sum == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) + (n & 0xf) + ctx->registers->CARRY_FLAG) > 0xf;
-    ctx->registers->CARRY_FLAG = sum > 0xFF;
+    ctx->registers.ZERO_FLAG = sum == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) + (n & 0xf) + ctx->registers.CARRY_FLAG) > 0xf;
+    ctx->registers.CARRY_FLAG = sum > 0xFF;
     
     return 8;
 }
@@ -504,17 +512,17 @@ uint8_t GB_SUB_R(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
         flags.C = 1 if carry_per_bit[7] else 0
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x07);
-    const uint8_t a = ctx->registers->A; 
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x07);
+    const uint8_t a = ctx->registers.A; 
     const uint8_t data = GB_GetReg8(ctx, rr);
 
     const int sub =  a - data;
-    ctx->registers->A = sub;
+    ctx->registers.A = sub;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (data & 0xf)) < 0;
-    ctx->registers->CARRY_FLAG = a < data;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (data & 0xf)) < 0;
+    ctx->registers.CARRY_FLAG = a < data;
     
     return 1; //TODO: CHECK TIMINGS    
 }
@@ -532,15 +540,15 @@ uint8_t GB_SUB_N(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t a = ctx->registers->A; 
-    const int sub = ctx->registers->A - n;
-    ctx->registers->A = sub;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t a = ctx->registers.A; 
+    const int sub = ctx->registers.A - n;
+    ctx->registers.A = sub;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (n & 0xf)) < 0;
-    ctx->registers->CARRY_FLAG = a < n;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (n & 0xf)) < 0;
+    ctx->registers.CARRY_FLAG = a < n;
     
     return 1; //TODO: CHECK TIMINGS!
 }
@@ -558,16 +566,16 @@ uint8_t GB_SUB_HL(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
-    const uint8_t a = ctx->registers->A; 
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.HL);
+    const uint8_t a = ctx->registers.A; 
     const int sub =  a - n;
-    ctx->registers->A = sub;
+    ctx->registers.A = sub;
 
     
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (n & 0xf)) < 0;
-    ctx->registers->CARRY_FLAG = a < n;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (n & 0xf)) < 0;
+    ctx->registers.CARRY_FLAG = a < n;
 
     //Used to set F reg 
     return 1;//TODO: CHECK TIMINGS
@@ -584,16 +592,16 @@ uint8_t GB_SBC_A_R(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
         flags.C = 1 if carry_per_bit[7] else 0
     */
-    const uint8_t rr = GB_GetReg8(ctx,(ctx->registers->INSTRUCTION & 0x07));
-    const uint8_t a = ctx->registers->A;
-    const uint8_t c = ctx->registers->CARRY_FLAG;
+    const uint8_t rr = GB_GetReg8(ctx,(ctx->registers.INSTRUCTION & 0x07));
+    const uint8_t a = ctx->registers.A;
+    const uint8_t c = ctx->registers.CARRY_FLAG;
     const int sub =  a - c - rr;
-    ctx->registers->A = sub;
+    ctx->registers.A = sub;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (rr & 0xf) - c) < 0;
-    ctx->registers->CARRY_FLAG = a < rr;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (rr & 0xf) - c) < 0;
+    ctx->registers.CARRY_FLAG = a < rr;
 
     //Used to set F reg 
     return 1;//TODO: CHECK TIMINGS
@@ -612,17 +620,17 @@ uint8_t GB_SBC_A_N(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t a = ctx->registers->A;
-    const uint8_t c = ctx->registers->CARRY_FLAG;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t a = ctx->registers.A;
+    const uint8_t c = ctx->registers.CARRY_FLAG;
 
     const int sub =  a - c - n;
-    ctx->registers->A = sub;
+    ctx->registers.A = sub;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (n & 0xf) - c) < 0;
-    ctx->registers->CARRY_FLAG = sub < 0;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (n & 0xf) - c) < 0;
+    ctx->registers.CARRY_FLAG = sub < 0;
     
     return 1;//TODO: CHECK TIMINGS
 }
@@ -640,17 +648,17 @@ uint8_t GB_SBC_A_HL(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->HL);
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.HL);
     
-    const uint8_t a = ctx->registers->A;
-    const int sub =  a - ctx->registers->CARRY_FLAG - n;
+    const uint8_t a = ctx->registers.A;
+    const int sub =  a - ctx->registers.CARRY_FLAG - n;
 
-    ctx->registers->A = sub;
+    ctx->registers.A = sub;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (n & 0xf) - ctx->registers->CARRY_FLAG) < 0;
-    ctx->registers->CARRY_FLAG = sub < 0;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (n & 0xf) - ctx->registers.CARRY_FLAG) < 0;
+    ctx->registers.CARRY_FLAG = sub < 0;
     
     return 1; //TODO: CHECK TIMINGS
 }
@@ -663,12 +671,12 @@ uint8_t GB_AND_R(EmulationState *ctx)
     A = result
     flags.Z = 1 if result == 0 else 0
     */
-    const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
-    uint8_t and = ctx->registers->A & GB_GetReg8(ctx, r);
-    ctx->registers->A = and;
+    const uint8_t r = (ctx->registers.INSTRUCTION & 0x07);
+    uint8_t and = ctx->registers.A & GB_GetReg8(ctx, r);
+    ctx->registers.A = and;
 
     
-    ctx->registers->ZERO_FLAG = and == 0;
+    ctx->registers.ZERO_FLAG = and == 0;
     return 1; //TODO: CHECK TIMINGS    
 }
 
@@ -684,14 +692,14 @@ uint8_t GB_AND_N(EmulationState *ctx)
     flags.H = 1
     flags.C = 0
     */
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    uint8_t and = ctx->registers->A & n;
-    ctx->registers->A = and;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
+    uint8_t and = ctx->registers.A & n;
+    ctx->registers.A = and;
 
-    ctx->registers->ZERO_FLAG = and == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 1;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = and == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 1;
+    ctx->registers.CARRY_FLAG = 0;
 
     return 1;//TODO: CHECK TIMING...
 }
@@ -708,14 +716,14 @@ uint8_t GB_AND_HL(EmulationState *ctx)
     flags.H = 1
     flags.C = 0
     */
-    const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    uint8_t and = ctx->registers->A & data;
-    ctx->registers->A = and;
+    const uint8_t data = GB_BusRead(ctx, ctx->registers.HL);
+    uint8_t and = ctx->registers.A & data;
+    ctx->registers.A = and;
 
-    ctx->registers->ZERO_FLAG = and == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 1;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = and == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 1;
+    ctx->registers.CARRY_FLAG = 0;
     
     return 1;//TODO: CHECK TIMING...
 }
@@ -733,14 +741,14 @@ uint8_t GB_XOR_R(EmulationState *ctx)
     flags.H = 0
     flags.C = 0
     */
-    const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
-    uint8_t xor = ctx->registers->A ^ GB_GetReg8(ctx, r);
-    ctx->registers->A = xor;
+    const uint8_t r = (ctx->registers.INSTRUCTION & 0x07);
+    uint8_t xor = ctx->registers.A ^ GB_GetReg8(ctx, r);
+    ctx->registers.A = xor;
 
-    ctx->registers->ZERO_FLAG = xor == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = xor == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = 0;
 
     return 1; //TODO: CHECK TIMINGS 
 }
@@ -757,14 +765,14 @@ uint8_t GB_XOR_N(EmulationState *ctx)
         flags.H = 0
         flags.C = 0
     */
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    uint8_t xor = ctx->registers->A ^ n;
-    ctx->registers->A = xor;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
+    uint8_t xor = ctx->registers.A ^ n;
+    ctx->registers.A = xor;
     
-    ctx->registers->ZERO_FLAG = xor == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = xor == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = 0;
 
     return 1; //TODO: CHECK TIMINGS 
 }
@@ -782,14 +790,14 @@ uint8_t GB_XOR_HL(EmulationState *ctx)
         flags.C = 0
     */
 
-    const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    uint8_t xor = ctx->registers->A ^ data;
-    ctx->registers->A = xor;
+    const uint8_t data = GB_BusRead(ctx, ctx->registers.HL);
+    uint8_t xor = ctx->registers.A ^ data;
+    ctx->registers.A = xor;
    
-    ctx->registers->ZERO_FLAG = xor == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = xor == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = 0;
 
     return 1; //TODO: CHECK TIMINGS    
 }
@@ -806,14 +814,14 @@ uint8_t GB_OR_R(EmulationState *ctx)
         flags.C = 0
     */
 
-    const uint8_t r = (ctx->registers->INSTRUCTION & 0x07);
-    uint8_t or = ctx->registers->A | GB_GetReg8(ctx, r);
-    ctx->registers->A = or;
+    const uint8_t r = (ctx->registers.INSTRUCTION & 0x07);
+    uint8_t or = ctx->registers.A | GB_GetReg8(ctx, r);
+    ctx->registers.A = or;
     
-    ctx->registers->ZERO_FLAG = or == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = or == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = 0;
 
     return 1; //TODO: CHECK TIMINGS
 }
@@ -830,14 +838,14 @@ uint8_t GB_OR_N(EmulationState *ctx)
         flags.H = 0
         flags.C = 0
     */
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    uint8_t or = ctx->registers->A | n;
-    ctx->registers->A = or;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
+    uint8_t or = ctx->registers.A | n;
+    ctx->registers.A = or;
 
-    ctx->registers->ZERO_FLAG = or == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = or == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = 0;
 
     return 1; //TODO: CHECK TIMINGS
 }
@@ -854,14 +862,14 @@ uint8_t GB_OR_HL(EmulationState *ctx)
         flags.H = 0
         flags.C = 0
     */
-    const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    uint8_t or = ctx->registers->A | data;
-    ctx->registers->A = or;
+    const uint8_t data = GB_BusRead(ctx, ctx->registers.HL);
+    uint8_t or = ctx->registers.A | data;
+    ctx->registers.A = or;
     
-    ctx->registers->ZERO_FLAG = or == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = 0;
+    ctx->registers.ZERO_FLAG = or == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = 0;
     
     //Used to set F reg 
     return 1;//TODO: CHECK TIMINGS
@@ -877,14 +885,14 @@ uint8_t GB_CP_R(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
         flags.C = 1 if carry_per_bit[7] else 0
     */
-    const uint8_t r = GB_GetReg8(ctx, ctx->registers->INSTRUCTION & 0x07) ;
-    const uint8_t a = ctx->registers->A;
+    const uint8_t r = GB_GetReg8(ctx, ctx->registers.INSTRUCTION & 0x07) ;
+    const uint8_t a = ctx->registers.A;
     const uint8_t sub = a - r;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1; 
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (r & 0xf)) < 0;  
-    ctx->registers->CARRY_FLAG = a < r;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1; 
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (r & 0xf)) < 0;  
+    ctx->registers.CARRY_FLAG = a < r;
 
     return 1; //TODO: CHECK TIMING!
 }
@@ -901,14 +909,14 @@ uint8_t GB_CP_N(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t n = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t a = ctx->registers->A;
+    const uint8_t n = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t a = ctx->registers.A;
     const uint8_t sub =  a - n;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = ((a & 0xf) - (n & 0xf)) < 0;
-    ctx->registers->CARRY_FLAG = ctx->registers->A < n;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = ((a & 0xf) - (n & 0xf)) < 0;
+    ctx->registers.CARRY_FLAG = ctx->registers.A < n;
 
     return 1; //TODO: CHECK TIMINGS
 }
@@ -925,13 +933,13 @@ uint8_t GB_CP_HL(EmulationState *ctx)
         flags.C = 1 if carry_per_bit[7] else 0
     */
 
-    const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
-    const uint8_t sub =  ctx->registers->A - data;
+    const uint8_t data = GB_BusRead(ctx, ctx->registers.HL);
+    const uint8_t sub =  ctx->registers.A - data;
 
-    ctx->registers->ZERO_FLAG = sub == 0;
-    ctx->registers->N_FLAG = 1; 
-    ctx->registers->H_CARRY_FLAG = sub >0x0F;  
-    ctx->registers->CARRY_FLAG = sub > 0xFF;
+    ctx->registers.ZERO_FLAG = sub == 0;
+    ctx->registers.N_FLAG = 1; 
+    ctx->registers.H_CARRY_FLAG = sub >0x0F;  
+    ctx->registers.CARRY_FLAG = sub > 0xFF;
     
     return 1; // TODO: CHECK  TIMING...
 }
@@ -947,13 +955,13 @@ uint8_t GB_INC_R(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
     */
     uint8_t result = 0;
-    const uint8_t r = (ctx->registers->INSTRUCTION & 0x38) >> 3;
+    const uint8_t r = (ctx->registers.INSTRUCTION & 0x38) >> 3;
     result = GB_GetReg8(ctx, r);
     GB_SetReg8(ctx, r, ++result);
     
-    ctx->registers->ZERO_FLAG = result == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = result > 0x0F;
+    ctx->registers.ZERO_FLAG = result == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = result > 0x0F;
     
     return 1; // TODO: CHECK  TIMING...
 }
@@ -970,14 +978,14 @@ uint8_t GB_INC_HL(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
     */
     uint8_t result = 0;
-    const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
+    const uint8_t data = GB_BusRead(ctx, ctx->registers.HL);
     result = data + 1; 
 
-    GB_BusWrite(ctx, ctx->registers->HL, result);
+    GB_BusWrite(ctx, ctx->registers.HL, result);
 
-    ctx->registers->ZERO_FLAG = result == 0;
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = result > 0x0F;
+    ctx->registers.ZERO_FLAG = result == 0;
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = result > 0x0F;
     
     return 1; // TODO: CHECK  TIMING...
 }
@@ -993,13 +1001,13 @@ uint8_t GB_DEC_R(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
     */
     uint16_t result = 0;
-    const uint8_t r = (ctx->registers->INSTRUCTION & 0x38) >> 3;
+    const uint8_t r = (ctx->registers.INSTRUCTION & 0x38) >> 3;
     result = GB_GetReg8(ctx, r) - 1;
     GB_SetReg8(ctx, r, result & 0xFF);
 
-    ctx->registers->ZERO_FLAG = result == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = (result & 0x0F) == 0x0F;
+    ctx->registers.ZERO_FLAG = result == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = (result & 0x0F) == 0x0F;
         
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1016,14 +1024,14 @@ uint8_t GB_DEC_HL(EmulationState *ctx)
         flags.H = 1 if carry_per_bit[3] else 0
     */
     uint8_t result = 0;
-    const uint8_t data = GB_BusRead(ctx, ctx->registers->HL);
+    const uint8_t data = GB_BusRead(ctx, ctx->registers.HL);
     
     result = data - 1; 
-    GB_BusWrite(ctx, ctx->registers->HL, result);
+    GB_BusWrite(ctx, ctx->registers.HL, result);
 
-    ctx->registers->ZERO_FLAG = result == 0;
-    ctx->registers->N_FLAG = 1;
-    ctx->registers->H_CARRY_FLAG = (result & 0x0F) == 0x0F;
+    ctx->registers.ZERO_FLAG = result == 0;
+    ctx->registers.N_FLAG = 1;
+    ctx->registers.H_CARRY_FLAG = (result & 0x0F) == 0x0F;
         
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1047,10 +1055,10 @@ uint8_t GB_CPL(EmulationState *ctx)
     flags.N = 1
     flags.H = 1
     */
-    ctx->registers->A = ~ctx->registers->A;
+    ctx->registers.A = ~ctx->registers.A;
 
-    ctx->registers->N_FLAG = 1; 
-    ctx->registers->H_CARRY_FLAG = 1; 
+    ctx->registers.N_FLAG = 1; 
+    ctx->registers.H_CARRY_FLAG = 1; 
 
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1071,15 +1079,15 @@ uint8_t GB_ADD_HL_RR(EmulationState *ctx)
     C - Set if carry from bits 15-16
     */
 
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4; // Extract rr from instruction
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x30) >> 4; // Extract rr from instruction
     const uint16_t rr_value = GB_GetReg16(ctx, rr, REG16_MODE_SP);
 
-    uint32_t result = ctx->registers->HL + rr_value;
+    uint32_t result = ctx->registers.HL + rr_value;
 
-    ctx->registers->H_CARRY_FLAG = (ctx->registers->HL  & 0xfff) + (rr_value & 0xfff) > 0xfff;
-    ctx->registers->CARRY_FLAG = result > 0xFFFF;
+    ctx->registers.H_CARRY_FLAG = (ctx->registers.HL  & 0xfff) + (rr_value & 0xfff) > 0xfff;
+    ctx->registers.CARRY_FLAG = result > 0xFFFF;
 
-    ctx->registers->HL = result & 0xFFFF;
+    ctx->registers.HL = result & 0xFFFF;
     return 1; // TODO: CHECK  TIMING...
 }
 
@@ -1089,7 +1097,7 @@ uint8_t GB_INC_RR(EmulationState *ctx)
     /*
         rr = rr+1      ; rr may be BC,DE,HL,SP
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0X30) >> 4; // Extract rr from instruction
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0X30) >> 4; // Extract rr from instruction
     const uint16_t rrInc = GB_GetReg16(ctx, rr, REG16_MODE_SP) + 1;
     GB_SetReg16(ctx, rr, rrInc, REG16_MODE_SP);
 
@@ -1102,7 +1110,7 @@ uint8_t GB_DEC_RR(EmulationState *ctx)
     /*
         rr = rr-1      ; rr may be BC,DE,HL,SP
     */
-    const uint8_t rr = (ctx->registers->INSTRUCTION & 0x30) >> 4; // Extract rr from instruction
+    const uint8_t rr = (ctx->registers.INSTRUCTION & 0x30) >> 4; // Extract rr from instruction
     const uint16_t rrDec = GB_GetReg16(ctx, rr, REG16_MODE_SP) - 1;
     GB_SetReg16(ctx, rr, rrDec, REG16_MODE_SP);
 
@@ -1115,9 +1123,9 @@ uint8_t GB_ADD_SP_DD(EmulationState *ctx)
     /*
         SP = SP +/- dd ; dd is 8-bit signed number
     */
-    const char dd = (char) GB_BusRead(ctx, ctx->registers->PC++);
-    const short sum =  ctx->registers->SP + dd; // TODO: VERIFY CONVERSION
-    ctx->registers->SP = sum;
+    const char dd = (char) GB_BusRead(ctx, ctx->registers.PC++);
+    const short sum =  ctx->registers.SP + dd; // TODO: VERIFY CONVERSION
+    ctx->registers.SP = sum;
     
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1129,9 +1137,9 @@ uint8_t GB_LD_HL_SP_PLUS_DD(EmulationState *ctx)
         HL = SP +/- dd ; dd is 8-bit signed number
     */
 
-    const char dd = (char) GB_BusRead(ctx, ctx->registers->PC++);
-    const short sum =  ctx->registers->SP + dd; //TODO: check conversion
-    ctx->registers->HL = sum;
+    const char dd = (char) GB_BusRead(ctx, ctx->registers.PC++);
+    const short sum =  ctx->registers.SP + dd; //TODO: check conversion
+    ctx->registers.HL = sum;
 
     //Used to set F reg 
     
@@ -1145,8 +1153,8 @@ uint8_t GB_RLCA(EmulationState *ctx)
     /*
         rotate A left trough carry
     */   
-   uint16_t shifted = ctx->registers->A << 1 <<  ctx->registers->CARRY_FLAG;
-   ctx->registers->A = shifted;
+   uint16_t shifted = ctx->registers.A << 1 <<  ctx->registers.CARRY_FLAG;
+   ctx->registers.A = shifted;
 
     
     return 1; // TODO: CHECK  TIMING...
@@ -1159,12 +1167,12 @@ uint8_t GB_RLA(EmulationState *ctx)
         rotate A left
     */
 
-   uint16_t shifted = ctx->registers->A << 1;
-   ctx->registers->A = shifted;
+   uint16_t shifted = ctx->registers.A << 1;
+   ctx->registers.A = shifted;
    
-    ctx->registers->ZERO_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = shifted > 0xFF;
+    ctx->registers.ZERO_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = shifted > 0xFF;
 
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1176,12 +1184,12 @@ uint8_t GB_RRCA(EmulationState *ctx)
         rotate right A through carry
     */
     
-    uint16_t shifted = ctx->registers->A >> 1 >> ctx->registers->CARRY_FLAG;
-    ctx->registers->A = shifted;
+    uint16_t shifted = ctx->registers.A >> 1 >> ctx->registers.CARRY_FLAG;
+    ctx->registers.A = shifted;
 
-    ctx->registers->ZERO_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = shifted > 0xFF;
+    ctx->registers.ZERO_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = shifted > 0xFF;
     
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1192,14 +1200,14 @@ uint8_t GB_RRA(EmulationState *ctx)
     /*
         rotate A right
     */
-    uint16_t shifted = ctx->registers->A >> 1;
-    ctx->registers->A = shifted;
+    uint16_t shifted = ctx->registers.A >> 1;
+    ctx->registers.A = shifted;
 
     
-    ctx->registers->ZERO_FLAG = 0;
-    ctx->registers->ZERO_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = shifted > 0xFF;
+    ctx->registers.ZERO_FLAG = 0;
+    ctx->registers.ZERO_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = shifted > 0xFF;
     
     return 1; // TODO: CHECK  TIMING...
 }
@@ -1224,19 +1232,19 @@ uint8_t GB_RL_R(EmulationState *ctx)
     // encoding: CB 1x
     MNE_Log("[GB_RL_R]\n");
 
-    uint8_t r = ctx->registers->INSTRUCTION & 0x07;
+    uint8_t r = ctx->registers.INSTRUCTION & 0x07;
     uint8_t rValue = GB_GetReg8(ctx, r);
-    uint8_t carryIn = ctx->registers->CARRY_FLAG;
+    uint8_t carryIn = ctx->registers.CARRY_FLAG;
 
     uint8_t carryOut = (rValue & 0x80) >> 7;
     rValue = (rValue << 1) | carryIn;       
 
-    ctx->registers->CARRY_FLAG = carryOut;
+    ctx->registers.CARRY_FLAG = carryOut;
     GB_SetReg8(ctx, r, rValue);
 
-    ctx->registers->ZERO_FLAG = rValue == 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->N_FLAG = 0;
+    ctx->registers.ZERO_FLAG = rValue == 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.N_FLAG = 0;
 
    return 1; // TODO: CHECK  TIMING...
 }
@@ -1322,12 +1330,12 @@ uint8_t GB_CB_BIT_N_R(EmulationState *ctx)
     */
     // encoding: 0xCB 0x40
     MNE_Log("[GB_CB_BIT_N_R]\n");
-    uint8_t r8 = ctx->registers->INSTRUCTION & 0x07;
-    uint8_t b3 = ctx->registers->INSTRUCTION & 0x38 >> 3;
+    uint8_t r8 = ctx->registers.INSTRUCTION & 0x07;
+    uint8_t b3 = ctx->registers.INSTRUCTION & 0x38 >> 3;
     uint8_t bitTest = ((GB_GetReg8(ctx, r8) >> b3) & 0x01) == 0x00;
 
-    ctx->registers->ZERO_FLAG = bitTest;
-    ctx->registers->CARRY_FLAG = bitTest > 0x0F;    
+    ctx->registers.ZERO_FLAG = bitTest;
+    ctx->registers.CARRY_FLAG = bitTest > 0x0F;    
 
    return 1; // TODO: CHECK  TIMING...
 }   
@@ -1340,8 +1348,8 @@ uint8_t GB_CB_RES_N_R(EmulationState *ctx)
     */
     MNE_Log("[GB_CB_RES_N_R]\n");
 
-    uint8_t r8 = ctx->registers->INSTRUCTION & 0x07;
-    uint8_t b3 = ctx->registers->INSTRUCTION & 0x38 >> 3;
+    uint8_t r8 = ctx->registers.INSTRUCTION & 0x07;
+    uint8_t b3 = ctx->registers.INSTRUCTION & 0x38 >> 3;
 
     uint8_t clearBit = ((GB_GetReg8(ctx, r8)) & ~(1 << b3));
     GB_SetReg8(ctx, r8, clearBit);
@@ -1357,8 +1365,8 @@ uint8_t GB_CB_SET_N_R(EmulationState *ctx)
     */
     MNE_Log("[GB_CB_SET_N_R]\n");
 
-    uint8_t r8 = ctx->registers->INSTRUCTION & 0x07;
-    uint8_t b3 = ctx->registers->INSTRUCTION & 0x38 >> 3;
+    uint8_t r8 = ctx->registers.INSTRUCTION & 0x07;
+    uint8_t b3 = ctx->registers.INSTRUCTION & 0x38 >> 3;
 
     uint8_t setBit = ((GB_GetReg8(ctx, r8)) | (1 << b3));
     GB_SetReg8(ctx, r8, setBit);
@@ -1375,9 +1383,9 @@ uint8_t GB_CCF(EmulationState *ctx)
         flags.H = 0
         flags.C = ~flags.C
     */
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = ~ctx->registers->CARRY_FLAG;     
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = ~ctx->registers.CARRY_FLAG;     
 
     return 1;
 }
@@ -1391,9 +1399,9 @@ uint8_t GB_SCF(EmulationState *ctx)
         flags.C = 1
     */
     
-    ctx->registers->N_FLAG = 0;
-    ctx->registers->H_CARRY_FLAG = 0;
-    ctx->registers->CARRY_FLAG = 1;   
+    ctx->registers.N_FLAG = 0;
+    ctx->registers.H_CARRY_FLAG = 0;
+    ctx->registers.CARRY_FLAG = 1;   
 
    return 1;
 }
@@ -1462,9 +1470,9 @@ uint8_t GB_JP_NN(EmulationState *ctx)
     PC = nn
     */
 
-    const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers->PC++);
-    ctx->registers->PC = (uint16_t)(nn_lsb | (nn_msb << 8));
+    const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers.PC++);
+    ctx->registers.PC = (uint16_t)(nn_lsb | (nn_msb << 8));
 
    return 4;
 }
@@ -1478,7 +1486,7 @@ uint8_t GB_JP_HL(EmulationState *ctx)
         PC = HL
     */
 
-   ctx->registers->PC = ctx->registers->HL;
+   ctx->registers.PC = ctx->registers.HL;
    
    return 1;
 }
@@ -1499,13 +1507,13 @@ uint8_t GB_JP_CC_NN(EmulationState *ctx)
     PC = nn
     */
 
-    const uint8_t cc = (ctx->registers->INSTRUCTION & 0x18) >> 3;
+    const uint8_t cc = (ctx->registers.INSTRUCTION & 0x18) >> 3;
 
     if (GB_ResolveCondition(ctx, cc))
     {
-        const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers->PC++);
-        const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers->PC++);
-        ctx->registers->PC = (uint16_t)(nn_lsb | (nn_msb << 8));
+        const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers.PC++);
+        const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers.PC++);
+        ctx->registers.PC = (uint16_t)(nn_lsb | (nn_msb << 8));
         return 4;
     }
 
@@ -1521,8 +1529,8 @@ uint8_t GB_JR_E(EmulationState *ctx)
     e = signed_8(read_memory(addr=PC)); PC = PC + 1
     PC = PC + e
     */
-    const int8_t nn_signed = GB_BusRead(ctx, ctx->registers->PC++);
-    ctx->registers->PC += nn_signed;
+    const int8_t nn_signed = GB_BusRead(ctx, ctx->registers.PC++);
+    ctx->registers.PC += nn_signed;
 
    return 3; 
 }
@@ -1536,12 +1544,12 @@ uint8_t GB_JR_CC_E(EmulationState *ctx)
     Length 2 bytes: opcode + e
     */
 
-    const uint8_t cc = (ctx->registers->INSTRUCTION & 0x18) >> 3;
-    const int8_t nn_signed = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t cc = (ctx->registers.INSTRUCTION & 0x18) >> 3;
+    const int8_t nn_signed = GB_BusRead(ctx, ctx->registers.PC++);
 
     if (GB_ResolveCondition(ctx, cc))
     {
-        ctx->registers->PC += nn_signed;
+        ctx->registers.PC += nn_signed;
         return 3;
     }
 
@@ -1563,15 +1571,15 @@ uint8_t GB_CALL_NN(EmulationState *ctx)
     write_memory(addr=SP, data=lsb(PC))
     PC = nn
     */
-    const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers->PC++);
-    const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers.PC++);
+    const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers.PC++);
     const uint16_t addr = (uint16_t)(nn_lsb | (nn_msb << 8));
-    ctx->registers->SP--;
+    ctx->registers.SP--;
 
 
-    GB_BusWrite(ctx,ctx->registers->SP--, ctx->registers->PC >> 8);
-    GB_BusWrite(ctx,ctx->registers->SP, ctx->registers->PC & 0xFF);
-    ctx->registers->PC = addr;
+    GB_BusWrite(ctx,ctx->registers.SP--, ctx->registers.PC >> 8);
+    GB_BusWrite(ctx,ctx->registers.SP, ctx->registers.PC & 0xFF);
+    ctx->registers.PC = addr;
 
     return 6;
 }
@@ -1595,19 +1603,19 @@ uint8_t GB_CALL_CC_NN(EmulationState *ctx)
         PC = nn
 
     */
-    const uint8_t cc = (ctx->registers->INSTRUCTION & 0x18) >> 3;
+    const uint8_t cc = (ctx->registers.INSTRUCTION & 0x18) >> 3;
 
     if (GB_ResolveCondition(ctx, cc))
     {
-        const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers->PC++);
-        const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers->PC++);
+        const uint8_t nn_lsb = GB_BusRead(ctx, ctx->registers.PC++);
+        const uint8_t nn_msb = GB_BusRead(ctx, ctx->registers.PC++);
         const uint16_t addr = (uint16_t)(nn_lsb | (nn_msb << 8));
 
-        ctx->registers->SP--;
+        ctx->registers.SP--;
 
-        GB_BusWrite(ctx, ctx->registers->SP--, ctx->registers->PC >> 8);
-        GB_BusWrite(ctx, ctx->registers->SP, ctx->registers->PC & 0xFF);
-        ctx->registers->PC = addr;
+        GB_BusWrite(ctx, ctx->registers.SP--, ctx->registers.PC >> 8);
+        GB_BusWrite(ctx, ctx->registers.SP, ctx->registers.PC & 0xFF);
+        ctx->registers.PC = addr;
         return 6;
     }
 
@@ -1622,10 +1630,10 @@ uint8_t GB_RET(EmulationState *ctx)
         msb = read_memory(addr=SP); SP = SP + 1
         PC = unsigned_16(lsb=lsb, msb=msb)
     */
-    const uint8_t lsb = GB_BusRead(ctx, ctx->registers->SP++);
-    const uint8_t msb = GB_BusRead(ctx, ctx->registers->SP++);
+    const uint8_t lsb = GB_BusRead(ctx, ctx->registers.SP++);
+    const uint8_t msb = GB_BusRead(ctx, ctx->registers.SP++);
 
-    ctx->registers->PC = (uint16_t)(lsb | (msb << 8));
+    ctx->registers.PC = (uint16_t)(lsb | (msb << 8));
     return 4;
 }
 
@@ -1642,14 +1650,14 @@ uint8_t GB_RET_CC(EmulationState *ctx)
         msb = read_memory(addr=SP); SP = SP + 1
         PC = unsigned_16(lsb=lsb, msb=msb)
     */
-    const uint8_t cc = (ctx->registers->INSTRUCTION & 0x18) >> 3;
+    const uint8_t cc = (ctx->registers.INSTRUCTION & 0x18) >> 3;
 
     if (GB_ResolveCondition(ctx, cc))
     {
-        const uint8_t lsb = GB_BusRead(ctx, ctx->registers->SP++);
-        const uint8_t msb = GB_BusRead(ctx, ctx->registers->SP++);
+        const uint8_t lsb = GB_BusRead(ctx, ctx->registers.SP++);
+        const uint8_t msb = GB_BusRead(ctx, ctx->registers.SP++);
 
-        ctx->registers->PC = (uint16_t)(lsb | (msb << 8));
+        ctx->registers.PC = (uint16_t)(lsb | (msb << 8));
         return 5;
     }
 
@@ -1668,9 +1676,9 @@ uint8_t GB_RETI(EmulationState *ctx)
         PC = unsigned_16(lsb=lsb, msb=msb)
         IME = 1
     */
-    const uint8_t lsb = GB_BusRead(ctx, ctx->registers->SP++);
-    const uint8_t msb = GB_BusRead(ctx, ctx->registers->SP++);
-    ctx->registers->PC = (uint16_t)(lsb | (msb << 8));
+    const uint8_t lsb = GB_BusRead(ctx, ctx->registers.SP++);
+    const uint8_t msb = GB_BusRead(ctx, ctx->registers.SP++);
+    ctx->registers.PC = (uint16_t)(lsb | (msb << 8));
     ctx->ime = 0x01;
 
     return 4;
@@ -1699,11 +1707,11 @@ uint8_t GB_RST_N(EmulationState *ctx)
 //TODO: MAKE MORE READABLE THIS FUNCTION AND AVOID MOVING CODE INTO FUNCTIONS (TO AVOID STACK OVERFLOWS ON MCU'S)
 uint8_t GB_CB_PREFIX(EmulationState *ctx)
 {
-    const uint8_t cbInstr = GB_BusRead(ctx, ctx->registers->PC++);
+    const uint8_t cbInstr = GB_BusRead(ctx, ctx->registers.PC++);
     
-    MNE_Log("%-32s PC:[0x%02X] CB_PREFIX_HANDLER: ", opcode_cb_names[cbInstr], ctx->registers->PC - 1);
+    MNE_Log("%-32s PC:[0x%02X] CB_PREFIX_HANDLER: ", opcode_cb_names[cbInstr], ctx->registers.PC - 1);
 
-    ctx->registers->INSTRUCTION = cbInstr;
+    ctx->registers.INSTRUCTION = cbInstr;
 
     /*
         CB prefix instructions:
@@ -1793,13 +1801,13 @@ uint8_t GB_ResolveCondition(const EmulationState *ctx, uint8_t cc)
     switch (cc)
     {
     case COND_NZ:
-        return !ctx->registers->ZERO_FLAG;
+        return !ctx->registers.ZERO_FLAG;
     case COND_Z:
-        return ctx->registers->ZERO_FLAG;
+        return ctx->registers.ZERO_FLAG;
     case COND_NC:
-        return !ctx->registers->CARRY_FLAG;
+        return !ctx->registers.CARRY_FLAG;
     case COND_C:
-        return ctx->registers->CARRY_FLAG;
+        return ctx->registers.CARRY_FLAG;
 
     default:
         MNE_Log("Cannot resolve CC condition(unknow value)");

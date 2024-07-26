@@ -22,8 +22,8 @@ typedef struct
     uint8_t         *vram;
     uint8_t         *hram;
     
+    GB_Registers    registers;
 
-    GB_Registers    *registers;
     // Cartige
     GB_Header       *header;
 } EmulationState;

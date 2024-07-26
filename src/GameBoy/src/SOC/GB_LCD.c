@@ -30,9 +30,9 @@ void GB_LCD_Tick(EmulationState* state, uint8_t cycles)
             if (state->ppuCycles>= 204) {
                 state->ppuCycles-= 204;
                 
-                state->registers->LCD_LY++;
+                state->registers.LCD_LY++;
 
-                if (state->registers->LCD_LY == 144) {
+                if (state->registers.LCD_LY == 144) {
                     state->ppuMode = 1; // VBlank
                     // Trigger VBlank interrupt
                 } else {
@@ -43,10 +43,10 @@ void GB_LCD_Tick(EmulationState* state, uint8_t cycles)
         case 1: // VBlank
             if (state->ppuCycles>= 456) {
                 state->ppuCycles-= 456;
-                state->registers->LCD_LY++;
+                state->registers.LCD_LY++;
 
-                if (state->registers->LCD_LY > 153) {
-                    state->registers->LCD_LY = 0;
+                if (state->registers.LCD_LY > 153) {
+                    state->registers.LCD_LY = 0;
                     state->ppuMode = 2; // OAM search
                 }
             }
@@ -60,7 +60,7 @@ void GB_LCD_Tick(EmulationState* state, uint8_t cycles)
         case 3: // Drawing pixels
             if (state->ppuCycles >= 172) {
                 state->ppuCycles-= 172;
-                GB_RenderScanLine();
+                GB_RenderScanLine(state);
                 state->ppuMode = 0; // HBlank
             }
             break;

@@ -110,8 +110,7 @@ static GameBoyInstruction s_gb_instruction_set[GB_INSTRUCTION_SET_LENGHT] =
 
 uint8_t GB_Initialize(int argc, const char ** argv)
 {
-    MNE_New(s_systemContext->registers, 1, GB_Registers);
-
+    //TODO: REMOVE USAGE OF ALLOCATED MEMORY....
     MNE_New(s_systemContext->bank_00, GB_ROM_SIZE, uint8_t);
     MNE_New(s_systemContext->vram, GB_VRAM_SIZE, uint8_t);
     MNE_New(s_systemContext->hram, GB_HRAM_SIZE, uint8_t);
@@ -227,8 +226,6 @@ void GB_QuitProgram()
         return;
     }
 
-    MNE_Delete(s_systemContext->registers);
-
     MNE_Delete(s_systemContext->bank_00);
     MNE_Delete(s_systemContext->vram);
     MNE_Delete(s_systemContext->hram);
@@ -252,36 +249,36 @@ uint8_t GB_HandleInterrupts()
     } 
 
     // VBLANK INTERRUPT
-    if (s_systemContext->registers->IE.VBLANK && s_systemContext->registers->IF.VBLANK){
+    if (s_systemContext->registers.IE.VBLANK && s_systemContext->registers.IF.VBLANK){
         interruptSrc = 0x40; // VBLANK INTERRUPT SOURCE
-        s_systemContext->registers->IF.VBLANK = 0;
+        s_systemContext->registers.IF.VBLANK = 0;
     }
 
-    if (s_systemContext->registers->IE.LCD && s_systemContext->registers->IF.LCD){
+    if (s_systemContext->registers.IE.LCD && s_systemContext->registers.IF.LCD){
         interruptSrc = 0x48; // LCD STAT INTERRUPT SOURCE
-        s_systemContext->registers->IF.LCD = 0;
+        s_systemContext->registers.IF.LCD = 0;
     }
     
-    if (s_systemContext->registers->IE.SERIAL && s_systemContext->registers->IF.SERIAL)
+    if (s_systemContext->registers.IE.SERIAL && s_systemContext->registers.IF.SERIAL)
     {
         interruptSrc = 0x58; // SERIAL INTERRUPT SOURCE
-        s_systemContext->registers->IF.SERIAL = 0;
+        s_systemContext->registers.IF.SERIAL = 0;
     }
 
-    if (s_systemContext->registers->IE.JOYPAD && s_systemContext->registers->IF.JOYPAD)
+    if (s_systemContext->registers.IE.JOYPAD && s_systemContext->registers.IF.JOYPAD)
     {
         interruptSrc = 0x60; // JOYPAD INTERRUPT SOURCE
-        s_systemContext->registers->IF.JOYPAD = 0;
+        s_systemContext->registers.IF.JOYPAD = 0;
     }
 
     s_systemContext->ime = 0; // Disable intterupts before calling the intrrupt handler
 
     // TODO: This should be an GB_CALL function but i didnt make to support operands; only context argument...
-    s_systemContext->registers->SP--;
-    GB_BusWrite(s_systemContext, s_systemContext->registers->SP--, s_systemContext->registers->PC >> 8);
-    GB_BusWrite(s_systemContext, s_systemContext->registers->SP, s_systemContext->registers->PC & 0xFF);
+    s_systemContext->registers.SP--;
+    GB_BusWrite(s_systemContext, s_systemContext->registers.SP--, s_systemContext->registers.PC >> 8);
+    GB_BusWrite(s_systemContext, s_systemContext->registers.SP, s_systemContext->registers.PC & 0xFF);
     
-    s_systemContext->registers->PC = interruptSrc;
+    s_systemContext->registers.PC = interruptSrc;
 
     // From magical sources, this is what it lasts the full interrupt handling (2 nops and a call that lasts only 3 M-Cycles)
     return 5;
@@ -291,7 +288,7 @@ uint8_t  GB_TickCpu()
 {
     //TODO: Implement CPU step function that take into account prefetch cycle (before executing an instruction fetch another one then execute both in order)
     // Fetch
-    const uint8_t instr = GB_BusRead(s_systemContext, s_systemContext->registers->PC++);
+    const uint8_t instr = GB_BusRead(s_systemContext, s_systemContext->registers.PC++);
 
     const GameBoyInstruction *fetchedInstruction = GB_FetchInstruction(instr);
     uint8_t clockCycles = 0;
@@ -302,23 +299,23 @@ uint8_t  GB_TickCpu()
         // This is to ignore the NOPS on the units tests... (due to ticking programs more than it needed)
         if (fetchedInstruction->opcode == 0)
         {
-            s_systemContext->registers->PC--;
+            s_systemContext->registers.PC--;
             return 1;
         }
         
 #ifdef GB_DEBUG
         if (instr != 0xCB) {
-            MNE_Log("%-32s PC:[0x%02X] HANDLER: %s\n", gb_opcodes_names[instr], s_systemContext->registers->PC - 1, fetchedInstruction->handlerName);
+            MNE_Log("%-32s PC:[0x%02X] HANDLER: %s\n", gb_opcodes_names[instr], s_systemContext->registers.PC - 1, fetchedInstruction->handlerName);
         }
 #endif
-        s_systemContext->registers->INSTRUCTION = instr;
+        s_systemContext->registers.INSTRUCTION = instr;
         clockCycles = fetchedInstruction->handler(s_systemContext);
 
         return clockCycles;
     }
     else
     {        
-        s_systemContext->registers->INSTRUCTION = GB_INVALID_INSTRUCTION; // Invalidate last instruction entry
+        s_systemContext->registers.INSTRUCTION = GB_INVALID_INSTRUCTION; // Invalidate last instruction entry
         GB_BusWrite(s_systemContext, GB_HALT_REGISTER, 0x01);
 
         MNE_Log("[INVALID INSTRUCTION]:[%02X][HALTED]\n", instr);
